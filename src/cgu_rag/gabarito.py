@@ -1,4 +1,4 @@
-﻿"""Gabarito de avaliacao com revisao humana (decisoes D-08 e D-11).
+"""Gabarito de avaliacao com revisao humana (decisoes D-08 e D-11).
 
 Fluxo: rascunho.jsonl (perguntas candidatas) -> revisao humana -> perguntas.jsonl (so as aprovadas).
 Campo `fase` (D-11): lista com uma ou mais das tres fases do PAD, ou um valor exclusivo:
@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import json
 import os
+import re
 from pathlib import Path
 
 FASES = ("admissibilidade", "acusatoria", "julgamento")
@@ -121,3 +122,38 @@ def exportar(itens: list[dict]) -> list[dict]:
         d["origem"] = "sintetico_editado" if i.get("editada") else "sintetico_revisado"
         saida.append(d)
     return saida
+
+
+PADROES_SUSPEITOS = (
+    (r"^\s*(para resolver|a quest[aã]o|a pergunta|esta quest[aã]o|considerando|com base no trecho)", "comeca como enunciado, nao como pergunta"),
+    (r"quest[aã]o objetiva|trecho fornecido|a pergunta a ser", "refere-se ao trecho ou a propria questao"),
+    (r"\(a\)|alternativas?\b", "contem alternativas de multipla escolha"),
+)
+
+
+def suspeitas(pergunta: str) -> list[str]:
+    """Motivos pelos quais um texto provavelmente nao e uma pergunta bem formada (lista vazia = parece boa).
+    Heuristica para apontar candidatas a correcao; a decisao e sempre humana."""
+    p = (pergunta or "").strip()
+    motivos = []
+    if not p.endswith("?"):
+        motivos.append("nao termina em '?'")
+    if len(p) > 220:
+        motivos.append(f"muito longa ({len(p)} caracteres)")
+    if len(p.split()) < 5:
+        motivos.append("muito curta")
+    for padrao, motivo in PADROES_SUSPEITOS:
+        if re.search(padrao, p, re.I):
+            motivos.append(motivo)
+    return motivos
+
+
+def reabrir(itens: list[dict], ids) -> list[str]:
+    """Volta os itens com esses ids para `pendente` (para editar a pergunta na revisao). Devolve os ids reabertos."""
+    ids, reabertos = set(ids), []
+    for it in itens:
+        if it["id"] in ids:
+            it["status"], it["fase"] = "pendente", None
+            it.pop("editada", None)
+            reabertos.append(it["id"])
+    return reabertos

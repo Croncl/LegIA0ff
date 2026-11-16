@@ -32,3 +32,12 @@ Figuras: `docs/img/03_comparacao.png`, `docs/img/04_progresso.png`, `docs/img/05
 - O acerto estrito pode penalizar secoes vizinhas que tambem respondem a pergunta.
 - Perguntas sinteticas, mesmo revisadas, tendem a favorecer a busca lexical.
 - Grupos pequenos (n de 6 a 11): diferencas de uma pergunta mudam muito os percentuais.
+
+## Agente: medicao robusta (medir_agente v2: 30 perguntas + 6 controles, 07/11/2026)
+Criterios da D-17 (proposta): consulta >= 90%; no maximo 1 de 4 conversas simples consultada; zero citacao sem consulta; no maximo 1 erro; mediana ate 60 s. Temperatura 0,1; contexto 8192; Ollama 0.40.15; commit 51ae0ee.
+
+| Modelo (raciocinio) | Consultou | Acerto | Consultas/pergunta | Conversas simples consultadas | Citou sem consultar | Erros | Mediana (s) | Veredito |
+|---|---|---|---|---|---|---|---|---|
+| Nemotron 3.5 Bolt E4B Q4_K_M (desligado) | 80% | 80% | 0,80 | 0 de 4 | 0 | 0 | 19,3 | REPROVADO: consultou 80% (minimo 90%) |
+
+Leitura: das 24 perguntas em que consultou, a secao esperada veio nas 24. Nas 6 sem consulta a resposta saiu em 1 a 3 s (conteudo a verificar: a metrica so detecta citacao de pagina). Aquecimento: 68,8 s. Os limites do criterio nao foram alterados depois do resultado.

@@ -1,9 +1,11 @@
-﻿"""Revisao humana do gabarito (D-08, D-11).
+"""Revisao humana do gabarito (D-08, D-11).
 
 Uso (na raiz do projeto):
   python scripts/gabarito.py revisar    # revisa as perguntas pendentes, uma por vez
   python scripts/gabarito.py status     # mostra o andamento
   python scripts/gabarito.py exportar   # grava as aprovadas em data/gabarito/perguntas.jsonl
+  python scripts/gabarito.py validar    # aponta perguntas suspeitas de nao serem perguntas bem formadas
+  python scripts/gabarito.py rever q14 q30   # reabre essas perguntas para corrigir (depois: revisar)
 O progresso e salvo a cada resposta; pode sair (s) e continuar depois.
 """
 import argparse
@@ -114,7 +116,36 @@ def exportar():
         print(f"AVISO: meta minima e {MINIMO} aprovadas.")
 
 
+def validar():
+    itens = gb.preparar(gb.carregar(RASCUNHO))
+    achadas = [(it, gb.suspeitas(it["pergunta"])) for it in itens if it.get("status") != "descartado"]
+    achadas = [(it, s) for it, s in achadas if s]
+    print(f"{len(achadas)} pergunta(s) suspeita(s) de {len(itens)}")
+    for it, s in achadas:
+        print(f"\n{it['id']} [{it.get('status')}] ({'; '.join(s)})\n  {it['pergunta'][:300]}")
+    if achadas:
+        print("\nPara corrigir: python scripts/gabarito.py rever " + " ".join(it["id"] for it, _ in achadas) + "   (depois: revisar)")
+
+
+def rever(ids):
+    if not ids:
+        raise SystemExit("Informe os ids. Ex.: python scripts/gabarito.py rever q14 q30")
+    itens = gb.preparar(gb.carregar(RASCUNHO))
+    reabertos = gb.reabrir(itens, ids)
+    gb.salvar(RASCUNHO, itens)
+    ausentes = sorted(set(ids) - set(reabertos))
+    print(f"{len(reabertos)} pergunta(s) reaberta(s): {' '.join(reabertos)}")
+    if ausentes:
+        print("ids nao encontrados:", " ".join(ausentes))
+    print("Agora rode: python scripts/gabarito.py revisar   (use [e]ditar para reescrever a pergunta)")
+
+
 if __name__ == "__main__":
     ap = argparse.ArgumentParser(description="Revisao humana do gabarito")
-    ap.add_argument("comando", choices=["revisar", "status", "exportar"])
-    {"revisar": revisar, "status": status, "exportar": exportar}[ap.parse_args().comando]()
+    ap.add_argument("comando", choices=["revisar", "status", "exportar", "validar", "rever"])
+    ap.add_argument("ids", nargs="*", help="ids para o comando rever (ex.: q14 q30)")
+    a = ap.parse_args()
+    if a.comando == "rever":
+        rever(a.ids)
+    else:
+        {"revisar": revisar, "status": status, "exportar": exportar, "validar": validar}[a.comando]()

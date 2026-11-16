@@ -1,4 +1,4 @@
-﻿import pytest
+import pytest
 
 from cgu_rag import gabarito as gb
 
@@ -78,3 +78,25 @@ def test_salvar_e_carregar(tmp_path):
     p = tmp_path / "x" / "r.jsonl"
     gb.salvar(p, gb.preparar(itens()))
     assert gb.carregar(p)[1]["id"] == "q02"
+
+
+def test_suspeitas_aponta_enunciados_e_aceita_perguntas_boas():
+    boas = ["Qual e o prazo para a instauracao do PAD apos o conhecimento do fato?",
+            "Quando a prescricao da pretensao punitiva comeca a correr?"]
+    ruins = ["Para resolver esta questao, e necessario compreender o contexto juridico em que a gravacao e licita.",
+             "A questao aborda a situacao de um servidor licenciado para tratar de interesses particulares.",
+             "A questao objetiva derivada do trecho fornecido e a seguinte:",
+             "Qual a multa?",
+             "Pergunta sem ponto de interrogacao sobre o prazo do PAD"]
+    assert all(gb.suspeitas(p) == [] for p in boas)
+    assert all(gb.suspeitas(p) for p in ruins)
+    assert any("longa" in m for m in gb.suspeitas("Qual o prazo " + "do processo " * 30 + "?"))
+
+
+def test_reabrir_volta_para_pendente_e_limpa_a_fase():
+    a = gb.preparar(itens())
+    gb.aplicar(a[0], "editar", fase="par", pergunta="Nova?")
+    gb.aplicar(a[1], "aprovar", fase="julgamento")
+    assert gb.reabrir(a, ["q01", "inexistente"]) == ["q01"]
+    assert a[0]["status"] == "pendente" and a[0]["fase"] is None and "editada" not in a[0]
+    assert a[1]["status"] == "aprovado"
