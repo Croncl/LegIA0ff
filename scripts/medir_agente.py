@@ -164,7 +164,7 @@ def main():
     saida.write_text("\n".join(json.dumps({k: v for k, v in d.items() if k != "linhas"}, ensure_ascii=False)
                                for d in detalhes), encoding="utf-8")
     print("\n" + json.dumps(m, indent=1))
-    print("\nVEREDITO (criterios da D-17, proposta):", "APROVADO" if aprovado else "REPROVADO")
+    print("\nVEREDITO (criterios da D-17, confirmados em 16/11/2026):", "APROVADO" if aprovado else "REPROVADO")
     for x in motivos:
         print(" -", x)
     print("detalhes (respostas completas) em", saida, "| limites:", CRITERIOS)

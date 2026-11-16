@@ -42,3 +42,4 @@ Uma linha por ocorrência. Formato: data | etapa | ocorrência | causa | correç
 | 16/11 | R7l | Triagem de uso de Qwen3-8B, Gemma 4 E4B, Llama 3.1 8B e Mistral Nemo 12B (raciocinio padrao e desligado onde existe) | , | Saida em results/triagem_candidatos_16-11.txt; mistral-nemo e Q4_0 |
 | 16/11 | R7l | Triagem de uso de Qwen3-8B, Gemma 4 E4B, Llama 3.1 8B e Mistral Nemo 12B (raciocinio padrao e desligado onde existe) | , | Saida em results/triagem_candidatos_16-11.txt; mistral-nemo e Q4_0 |
 | 16/11 | R7m | Triagem de uso dos candidatos: Qwen3-8B e Gemma 4 E4B seguem (raciocinio desligado funciona); Llama 3.1 8B reprovado (chamou ferramenta numa saudacao); Mistral Nemo segue, lento | , | docs/ANALISE_DE_ERROS.md criado |
+| 16/11 | R7n | Criterios da D-17 confirmados pelo autor; R3d concluido; resumo v2 para novo chat | , | Proximo: baseline com gabarito corrigido e medicao dos finalistas |

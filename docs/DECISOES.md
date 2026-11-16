@@ -130,6 +130,7 @@ Decisões `A validar` só viram `Aceita` depois da confirmação explícita do a
 - **Candidatos:** Spark-X2.6-4B Q8_0 (ponto de partida), NVIDIA Nemotron 3.5 Bolt E4B, Qwen2.5-3B, Qwen2.5-7B e Qwen3.8-27B Q4_K_M (referencia). Fora: Qwen3.8-27B FP8 (exige GPU e outro servidor) e Jurema (removido; ver docs/MODELOS.md).
 - **Criterios (proposta, a validar):** eliminatorios: consulta em pelo menos 90% de 30 perguntas normativas; no maximo 1 saudacao consultada em 4; zero citacao de pagina sem consulta; no maximo 1 erro por rodada; mediana ate 60 s por pergunta. Desempate, nesta ordem: qualidade da resposta (rubrica manual), acerto na consulta, latencia, memoria.
 - **Metodologia:** mesmos documentos, trechos, prompts, parametros (temperatura 0,1) e gabarito; um modelo carregado por vez; aquecimento antes de cronometrar; tag, digest, quantizacao e contexto registrados; n = 30 nos finalistas.
-- **Confirmacao do autor:** ______ (data)
+- **Confirmacao do autor:** criterios confirmados em 16/11/2026; a escolha do modelo depende das medicoes com o gabarito corrigido
 
 - **Quantizacao (etapa B):** so depois de escolher o modelo, comparar Q4_K_M, Q5_K_M e Q8_0 do(s) vencedor(es), apenas com tags oficiais disponiveis (ex.: qwen2.5:7b-instruct-q5_K_M e -q8_0; o Nemotron oficial so tem Q4_K_M), mudando uma variavel por vez.
+

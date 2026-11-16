@@ -1,4 +1,4 @@
-"""Criterios de decisao do modelo do agente (D-17). PROPOSTA ate a confirmacao do autor.
+"""Criterios de decisao do modelo do agente (D-17). Criterios confirmados pelo autor em 16/11/2026.
 
 Ajuste os limites aqui e todos os scripts passam a usar os novos valores.
 """
