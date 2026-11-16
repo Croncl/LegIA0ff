@@ -48,3 +48,13 @@ Regra de triagem: so segue para a medicao o modelo que listar "tools" nas Capabi
 | llama3.1:8b | 8,0 B | Q4_K_M | 131.072 | tools | segue para a triagem de uso |
 | gemma4:e4b | 7,5 B | Q4_K_M | 131.072 | vision, tools, thinking | segue; mesmo numero de parametros do Nemotron Bolt E4B (7,52 B), coerente com a base comum citada pelas fontes |
 | mistral-nemo:12b | 12,2 B | Q4_0 (diferente das demais) | 1.024.000 | tools | segue; a quantizacao difere dos outros modelos, entao a comparacao exige cautela |
+
+## Triagem de uso dos candidatos adicionais (16/11/2026, testar_tools.py; 2 perguntas por modelo)
+| Modelo | Raciocinio | Pergunta 1 (deve chamar) | Pergunta 2 (nao deve) | Resultado |
+|---|---|---|---|---|
+| qwen3:8b | desligado | chamou, 6 s, 36 tokens | nao chamou | segue |
+| qwen3:8b | padrao | chamou, 24 s, 150 tokens | nao chamou | segue (mais lento) |
+| gemma4:e4b | desligado | chamou, 3 s, 27 tokens | nao chamou | segue |
+| gemma4:e4b | padrao | chamou, 23 s, 448 tokens | nao chamou | segue (mais lento) |
+| llama3.1:8b | padrao | chamou | chamou (saudacao) | REPROVADO: chama ferramenta em conversa simples (1 amostra) |
+| mistral-nemo:12b (Q4_0) | padrao | chamou, 17 s | nao chamou, 7 s | segue; o mais lento |
