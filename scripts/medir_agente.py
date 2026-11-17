@@ -144,6 +144,7 @@ def main():
         "controles_consultados": sum(bool(d["consultas"]) for d in conv),
         "fora_de_escopo_consultou": sum(bool(d["consultas"]) for d in fora),
         "citou_sem_consultar": media([d["citou_pagina"] and not d["consultas"] for d in detalhes]),
+        "recusa_indevida": sum(d["resposta"].strip().startswith("Esta pergunta") for d in norm),
         "erros": sum(bool(d["erro"]) for d in detalhes),
         "mediana_s": round(mediana([d["segundos"] for d in norm]), 1), "media_s": media([d["segundos"] for d in norm]),
         "mediana_controle_s": round(mediana([d["segundos"] for d in conv]), 1),
