@@ -5,6 +5,8 @@ import threading
 
 from langchain_core.tools import tool
 
+from .citacao import nome_curto
+
 
 def formatar_trechos(linhas, max_car: int = 900) -> str:
     """Texto que o modelo recebe: um bloco por trecho, com documento, secao, paginas, link e o texto."""
@@ -20,15 +22,30 @@ def formatar_trechos(linhas, max_car: int = 900) -> str:
     return "\n\n".join(blocos)
 
 
+def trechos_estruturados(linhas, max_car: int = 900) -> list[dict]:
+    """Versao estruturada dos trechos (D-18): vai no `artifact` da ToolMessage, nao para o modelo.
+    O no `saida` do grafo usa isso para anexar a fonte e a pagina corretas. So tipos simples (serializaveis)."""
+    return [
+        {
+            "doc": nome_curto(r["doc_titulo"], r["nota_tecnica"]),
+            "pag_ini": r["pag_ini"],
+            "pag_fim": r["pag_fim"],
+            "texto": " ".join((r["texto"] or "").split())[:max_car],
+        }
+        for r in linhas
+    ]
+
+
 def criar_ferramenta_consulta(buscador, k: int = 4, max_car: int = 900):
     """`buscador(consulta, k)` devolve as linhas mais relevantes (ex.: BM25 + vetores com RRF).
     k e max_car limitam o tamanho do resultado para caber no contexto do modelo local."""
 
-    @tool
-    def consultar_base(consulta: str) -> str:
+    @tool(response_format="content_and_artifact")
+    def consultar_base(consulta: str):
         """Busca trechos nos normativos e manuais da CGU sobre PAD e PAR (prazos, ritos, regras e conceitos).
         Use frases curtas com termos tecnicos. Se os trechos nao responderem, reformule e busque de novo."""
-        return formatar_trechos(buscador(consulta, k), max_car)
+        linhas = buscador(consulta, k)
+        return formatar_trechos(linhas, max_car), trechos_estruturados(linhas, max_car)
 
     return consultar_base
 

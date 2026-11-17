@@ -134,3 +134,14 @@ Decisões `A validar` só viram `Aceita` depois da confirmação explícita do a
 
 - **Quantizacao (etapa B):** so depois de escolher o modelo, comparar Q4_K_M, Q5_K_M e Q8_0 do(s) vencedor(es), apenas com tags oficiais disponiveis (ex.: qwen2.5:7b-instruct-q5_K_M e -q8_0; o Nemotron oficial so tem Q4_K_M), mudando uma variavel por vez.
 
+
+## D-18 Formato curto de resposta e citacao de fonte pelo sistema
+- **Status:** Aceita (confirmada pelo autor em 17/11/2026)
+- **Contexto:** as respostas saiam longas, cortadas no meio e com a fonte escrita pelo proprio modelo. A medicao do Nemotron (17/11) tambem mostrou que o gabarito tinha enunciados no lugar de perguntas (ver D-17 e DIARIO R3d); as perguntas foram reescritas em formato curto e direto.
+- **Decisao:** (1) o prompt pede resposta direta, no maximo 3 frases, sem introducao e sem fonte; (2) a fonte e a pagina sao anexadas pelo sistema (no `saida` do grafo) a partir dos trechos recuperados no turno: ate 2 fontes, escolhidas pela sobreposicao de termos com a resposta, no formato `Fonte: Manual PAD, pag. 400`; sem fonte quando a resposta e "Nao encontrei nos documentos"; (3) limite explicito de 300 tokens de saida (`LLM_MAX_TOKENS`), com o campo `truncada` no estado; (4) nomes curtos dos documentos (Ementario Nª ed., Manual PAD, Manual PAR Nª ed.); (5) o mesmo prompt e o mesmo limite valem para todos os modelos medidos.
+- **Motivo:** o modelo deixa de poder inventar pagina; a citacao fica curta; o corte silencioso some; atende em parte o grounding previsto na R11. A resposta citada sem consulta continua visivel para a metrica `citou_sem_consultar`, porque o sistema so anexa fonte quando houve consulta.
+- **Alternativas:** deixar o modelo citar (mantem o risco de pagina inventada); anexar todos os trechos recuperados (cita fontes que nao sustentam a resposta); aumentar o limite de tokens sem encurtar a resposta.
+- **Riscos:** a fonte escolhida por sobreposicao de termos pode nao ser o trecho que sustenta a resposta (medir na leitura cega); o limite de 300 tokens pode cortar modelos com raciocinio ligado; o formato novo da citacao pode exigir ajuste nas metricas (`citou_pagina`).
+- **Efeito nas medicoes:** as medicoes anteriores (prompt antigo e gabarito com enunciados) ficam como historico; baseline e finalistas sao refeitos com a D-18 e o gabarito reescrito.
+- **Confirmacao do autor:** 17/11/2026
+- **Adendo (17/11/2026):** o prompt tambem manda recusar perguntas fora de PAD, PAR e processos de correicao da CGU com uma frase fixa. Motivo: no teste do chat o modelo respondeu de memoria a uma pergunta sobre a populacao do Brasil.

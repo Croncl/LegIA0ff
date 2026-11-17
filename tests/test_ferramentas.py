@@ -67,14 +67,15 @@ def test_consulta_e_resposta_com_a_fonte():
 def test_reformula_e_busca_de_novo():
     _, g, consultas = montar([chamada("q1", "a"), chamada("q2", "b"), AIMessage("final")])
     resposta, estado = conversar(g, "pergunta vaga", "t1")
-    assert resposta == "final" and [c[0] for c in consultas] == ["q1", "q2"]
+    assert resposta.startswith("final") and [c[0] for c in consultas] == ["q1", "q2"]
+    assert resposta.endswith("Fonte: Manual PAD, págs 1-2")  # D-18: fonte anexada pelo sistema
     assert [c["args"]["consulta"] for c in estado["ferramentas"]] == ["q1", "q2"]
 
 
 def test_limite_de_consultas_forca_a_resposta():
     modelo, g, consultas = montar([chamada(f"q{i}", f"id{i}") for i in range(10)], max_consultas=2)
     resposta, estado = conversar(g, "pergunta", "t1")
-    assert resposta == "resposta forcada" and len(consultas) == 2 and len(estado["ferramentas"]) == 2
+    assert resposta.startswith("resposta forcada") and len(consultas) == 2 and len(estado["ferramentas"]) == 2
 
 
 def test_saudacao_nao_consulta():
@@ -90,7 +91,7 @@ def test_ferramentas_do_turno_nao_vazam_para_o_proximo_e_o_historico_fica_enxuto
     assert estado["ferramentas"] == []
     enviado = modelo.com[-1]
     assert not any(isinstance(m, ToolMessage) for m in enviado)           # resultado antigo nao volta ao contexto
-    assert [m.content for m in enviado if m.type in ("human", "ai")] == ["primeira", "resposta 1", "segunda"]
+    assert [m.content.split("\n\n")[0] for m in enviado if m.type in ("human", "ai")] == ["primeira", "resposta 1", "segunda"]
 
 
 def _banco(tmp_path):
@@ -113,7 +114,7 @@ def test_buscador_por_thread_funciona_dentro_do_toolnode(tmp_path):
     buscador = criar_buscador(abrir=lambda: sqlite3.connect(db), buscar_fn=_busca)
     g = criar_grafo(modelo, ferramentas=[criar_ferramenta_consulta(buscador)])
     resposta, _ = conversar(g, "pergunta", "t1")
-    assert resposta == "final" and "achei" in modelo.com[1][-1].content
+    assert resposta.startswith("final") and "achei" in modelo.com[1][-1].content
 
 
 def test_conexao_da_thread_principal_falha_no_toolnode_e_o_erro_vai_ao_modelo(tmp_path):
