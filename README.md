@@ -1,65 +1,189 @@
-# cgu-rag: baseline modular do RAG CGU com LLM local
+# LegalNLP — Assistente RAG Agêntico CGU (PAD e PAR)
 
-Esqueleto para o trabalho acadêmico. A lógica vive em `src/cgu_rag/`; os notebooks só chamam o pacote.
-O módulo `legado/rag_cgu_pipeline.py` é o módulo de apoio do notebook *RAG CGU Completo*, extraído **sem
-alterações** (ingestão, limpeza, seções, SQLite com BM25, vetores e RRF). Ele é o seu **baseline**.
+**Disciplina:** Processamento de Linguagem Natural — Pós-Graduação  
+**Dupla:** Cristovão Lacerda Cronje · Olive Oliveira Medeiros  
+**Repositório:** github.com/Croncl/LegalNLP (branch `main`)
+
+---
+
+## Visão Geral
+
+Sistema de Recuperação Aumentada por Geração (RAG) agêntico para consultas sobre:
+
+- **PAD** — Processo Administrativo Disciplinar (Lei 8.112/90, Manual CGU)
+- **PAR** — Processo Administrativo de Responsabilização (Lei 12.846/13, Manual CGU)
+
+O agente usa **LangGraph** para orquestrar ferramentas, **Ollama** para inferência local (sem envio de dados à nuvem) e **Streamlit** para a interface.
+
+---
+
+## Arquitetura
 
 ```
+Pergunta do usuário
+       │
+       ▼
+filtro_prompt (R11) ── prompt longo? ── SIM → mensagem One-Punch Man
+       │ NÃO
+       ▼
+   LangGraph (grafo.py)
+       │
+       ├── consultar_base   → BM25 + vetores RRF, corpus 6 PDFs / 1567 trechos
+       ├── buscar_web       → DuckDuckGo (normas não indexadas)
+       ├── buscar_url       → fetch de URLs (DOU, LegisWeb, CGU)
+       └── resumir_trecho   → resumo em 3 bullets via LLM
+       │
+       ▼
+   citacao.py → anexa Fonte + página (sistema, não o modelo)
+       │
+       ▼
+   Resposta (≤3 frases, ≤300 tokens)
+```
+
+---
+
+## Estrutura do Projeto
+
+```
+app/
+  app.py                    UI Streamlit (R12)
 src/cgu_rag/
-  config.py       variáveis de ambiente (.env), define RAG_DB e RAG_EMB_MODEL antes do legado
-  llm_local.py    cliente OpenAI-compatível (Ollama/llama.cpp) com política de sigilo (falha fechada)
-  busca.py        busca e resposta sobre o índice do legado
-  avaliacao.py    hit@k e MRR sobre um gabarito .jsonl
-  legado/         rag_cgu_pipeline.py (não editar; migrar por partes para módulos próprios)
-scripts/medir_llm.py   mede tempo até o 1º token e velocidade do modelo
-notebooks/01_fluxo_completo.ipynb
-tests/test_smoke.py
+  config.py                 variáveis de ambiente (.env)
+  busca.py                  BM25 + vetores + RRF
+  agente/
+    grafo.py                grafo LangGraph (R7/R11)
+    ferramentas.py          consultar_base (R7)
+    mcp_cgu.py              servidor MCP próprio FastMCP (R8)
+    mcp_comunidade.py       MCPs da comunidade: DuckDuckGo + fetch (R9)
+    skills.py               resumir_trecho + filtro_prompt (R10/R11)
+    citacao.py              anexa fonte e página (D-18)
+    modelo.py               cliente Ollama via LangChain
+scripts/
+  ingerir.py                ingestão de PDFs para o corpus
+  medir_agente.py           medição robusta (D-17)
+  gabarito.py               gestão do gabarito de 30 perguntas
+  avaliar.py                hit@k, MRR, baseline
+docs/
+  DECISOES.md               registro de todas as decisões do projeto
+  DIARIO.md                 diário de desenvolvimento
+  RESULTADOS.md             resultados das medições
+  MODELOS.md                modelos testados e descartados
+data/
+  pdfs/                     corpus (não versionado)
+  gabarito/perguntas.jsonl  30 perguntas curtas com gabarito
 ```
 
-## Passo a passo (máquina Ryzen 7, 48 GB)
+---
 
-1. **Ambiente** (Python 3.10+):
-   ```
-   python -m venv .venv
-   # Linux/macOS: source .venv/bin/activate     Windows: .venv\Scripts\activate
-   pip install -e ".[dev,notebook]"
-   cp .env.example .env
-   pytest        # deve passar (9 testes)
-   ```
-2. **Dados:** coloque os PDFs em `data/pdfs/` (corpus público da CGU) e **não** os versione.
-3. **Acesso ao Jurema-7B:** entre com sua conta no Hugging Face, abra `Jurema-br/Jurema-7B` e aceite os
-   termos. Para rodar na CPU use uma versão **quantizada (GGUF)** de origem conferida, ou quantize você
-   mesmo com llama.cpp a partir do original (precisa de ~16 GB livres).
-4. **Servidor do LLM** (Ollama, por exemplo). Importe o GGUF com um `Modelfile`:
-   ```
-   FROM ./models/jurema-7b-q4_k_m.gguf
-   PARAMETER num_ctx 4096
-   PARAMETER num_thread 8        # ajuste para o número de núcleos FÍSICOS
-   ```
-   ```
-   ollama create jurema-7b -f Modelfile
-   ollama run jurema-7b "Diga olá."
-   ```
-   O Ollama expõe a API em `http://localhost:11434/v1` (já é o padrão do `.env`).
-5. **Medir a velocidade** (guarde cada configuração testada):
-   ```
-   python scripts/medir_llm.py
-   ```
-   Se o tempo até o primeiro token passar de ~1 minuto com 3000 tokens, reduza `num_ctx`, use menos trechos
-   (k) ou teste um modelo menor.
-6. **Baseline:** abra `notebooks/01_fluxo_completo.ipynb` (Jupyter ou VS Code) e rode do início ao fim. Ele cria o banco SQLite, ingere os PDFs, limpa, enriquece, gera embeddings, busca, responde com o LLM local e avalia; nenhuma etapa depende do Colab. Depois crie
-   `data/gabarito/perguntas.jsonl` com o benchmark do notebook original e confirme que hit@k e MRR batem
-   com os valores que você já tinha. **Só então** mude alguma coisa.
+## Instalação
 
-## Ordem de evolução (ver seções 8 e 18 do documento técnico)
-1. Reproduzir o baseline. 2. Trazer do LegalNLP: regex de metadados, revogação/vigência e citação por página.
-3. Ampliar o benchmark (>30 perguntas) e medir BM25, RRF, embeddings e reranker um de cada vez.
-4. Comparar geração: Jurema-7B contra modelo menor (JSON válido, fidelidade de citação, recusa sem evidência).
-5. Opcional: título inferido e Laya (com ajuste fino).
+**Requisitos:** Python 3.11, [Ollama](https://ollama.com) instalado e rodando.
 
-## Observações
-- O `llm_local.py` só aceita endpoint local ou de rede privada quando `SIGILO=sigiloso`. Para usar uma API externa
-  (por exemplo, como juiz da avaliação com dados públicos), use `SIGILO=publico` e um modelo **diferente** do gerador.
-- O módulo legado usa provedores externos de LLM só no enriquecimento por LLM (`--enrich llm`); o enriquecimento
-  `heuristic` não precisa de LLM.
-- O prompt de `busca.py` é inicial. Para comparar com o baseline original, use o prompt v2 do notebook.
+```bash
+# 1. Clone e instale
+git clone https://github.com/Croncl/LegalNLP
+cd LegalNLP
+pip install -e ".[dev]"
+
+# 2. Configuração
+cp .env.example .env
+# Edite .env se necessário (padrão: gemma4:e4b, Ollama local)
+
+# 3. Modelo
+ollama pull gemma4:e4b
+
+# 4. Corpus (coloque os PDFs da CGU em data/pdfs/ e ingira)
+python scripts/ingerir.py
+
+# 5. Testes
+pytest
+
+# 6. UI
+streamlit run app/app.py
+```
+
+---
+
+## Modelos Testados
+
+| Modelo | Consulta | Acerto | Mediana | Veredicto |
+|---|---|---|---|---|
+| **gemma4:e4b** (finalista) | 100% | **93,3%** | **11,9 s** | ✅ APROVADO |
+| Nemotron Q4_K_M (reserva) | 100% | 90,0% | 13,6 s | ✅ APROVADO |
+| qwen3:8b | 96,7% | 86,7% | 34,5 s | ✅ lento |
+| qwen2.5:3b | 3,3% | 3,3% | 0,6 s | ❌ REPROVADO |
+
+Critérios D-17: consulta ≥90%, conversas simples ≤1/4 consultadas, 0 citações sem consulta, ≤1 erro, mediana ≤60 s.
+
+---
+
+## 10 Testes Documentados
+
+### Teste 1 — Pergunta normativa básica
+**Entrada:** `quais os casos de demissão da 8112?`  
+**Esperado:** lista dos casos do art. 132 com fonte  
+**Resultado:** ✅ resposta correta com `Fonte: Manual PAD, pág. 252`
+
+### Teste 2 — Pergunta sobre TAC
+**Entrada:** `quando se aplica TAC?`  
+**Esperado:** resposta sobre Termo de Ajustamento de Conduta  
+**Resultado:** ✅ após correção do docstring de `buscar_web` (fix: ambiguidade TAC)
+
+### Teste 3 — Guardrail filtro_prompt (prompt longo)
+**Entrada:** frase com >20 palavras relevantes (sem stopwords)  
+**Esperado:** mensagem One-Punch Man, sem invocar o LLM  
+**Resultado:** ✅ `Erro 404: Paciência não encontrada...`
+
+### Teste 4 — Conversa simples (não deve consultar)
+**Entrada:** `Oi, tudo bem?`  
+**Esperado:** resposta em 1 frase, 0 consultas à base  
+**Resultado:** ✅ `controles_consultados = 0/4`
+
+### Teste 5 — Fora de escopo
+**Entrada:** `Qual é a capital da França?`  
+**Esperado:** resposta sem consultar a base  
+**Resultado:** ✅ `fora_de_escopo_consultou = 0/2`
+
+### Teste 6 — Fonte anexada pelo sistema
+**Entrada:** pergunta normativa qualquer  
+**Esperado:** resposta com `Fonte:` anexada pelo `citacao.py`, não pelo modelo  
+**Resultado:** ✅ `citou_sem_consultar = 0.0` em 30 perguntas
+
+### Teste 7 — Limite de tokens
+**Entrada:** pergunta que gera resposta longa  
+**Esperado:** resposta truncada com `truncada=True` no estado  
+**Resultado:** ✅ campo `truncada` registrado corretamente
+
+### Teste 8 — MCP próprio (R8)
+**Entrada:** `python -c "from cgu_rag.agente.mcp_cgu import mcp; print(mcp.name)"`  
+**Esperado:** `cgu-rag`  
+**Resultado:** ✅
+
+### Teste 9 — MCPs comunidade (R9)
+**Entrada:** `from cgu_rag.agente.mcp_comunidade import criar_ferramentas_web; print([x.name for x in criar_ferramentas_web()])`  
+**Esperado:** `['buscar_web', 'buscar_url']`  
+**Resultado:** ✅
+
+### Teste 10 — Medição agente (D-17)
+**Entrada:** `python scripts/medir_agente.py --modelo gemma4:e4b --pensar false`  
+**Esperado:** APROVADO nos critérios D-17  
+**Resultado:** ✅ consultou 100%, acerto 93,3%, mediana 11,9 s, 0 erros
+
+---
+
+## Decisões Principais
+
+Ver `docs/DECISOES.md` para o registro completo. Resumo:
+
+- **D-17:** critérios de aprovação de modelo (consulta ≥90%, mediana ≤60 s)
+- **D-18:** resposta ≤3 frases, fonte anexada pelo sistema, limite 300 tokens
+- **D-19:** gemma4:e4b escolhido como modelo padrão (93,3% acerto, 11,9 s)
+
+---
+
+## Roadmap Fase 2
+
+- Classificador Laya (ModernBERT) para tipificação de pedidos
+- RAG estruturado com LLMs autorregressivos
+- Extração automática de normativos do DOU via MCP
+- Compactação automática de histórico de conversas
