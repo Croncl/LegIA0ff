@@ -145,3 +145,14 @@ Decisões `A validar` só viram `Aceita` depois da confirmação explícita do a
 - **Efeito nas medicoes:** as medicoes anteriores (prompt antigo e gabarito com enunciados) ficam como historico; baseline e finalistas sao refeitos com a D-18 e o gabarito reescrito.
 - **Confirmacao do autor:** 17/11/2026
 - **Adendo (17/11/2026):** o prompt tambem manda recusar perguntas fora de PAD, PAR e processos de correicao da CGU com uma frase fixa. Motivo: no teste do chat o modelo respondeu de memoria a uma pergunta sobre a populacao do Brasil.
+
+- **Adendo v2 (17/11/2026):** escopo ampliado (grafo.py commit 8b107a6): consultar SEMPRE em normas/servidores/licitacoes/prazos; recusar so o claramente alheio (frase fixa). Motivo: v1 recusou 10/30 perguntas juridicas legitimas.
+
+- **Adendo v3 (17/11/2026):** frase de recusa removida do PROMPT_RAG (commit 22fde25, opcao A). Guardrail de entrada (R11) fica para depois. Modelo sempre consulta; responde 'Nao encontrei nos documentos' se nao achar. Metrica recusa_indevida adicionada ao medir_agente.py.
+
+## D-19 Escolha do modelo finalista
+- **Status:** Aceita (17/11/2026)
+- **Decisao:** gemma4:e4b (Q4_K_M, 7.5B, digest dc35e8d9c606) escolhido como modelo padrao. Duas rodadas: acerto 93.3%/93.3%, mediana 11.4s/11.9s, consultou 100%, recusa_indevida 0, erros 0. APROVADO nas duas rodadas.
+- **Descartados nesta rodada:** qwen2.5:3b (consultou 3%, REPROVADO); qwen3:8b (APROVADO mas mediana 34.5s, lento). Nemotron Q4_K_M fica como reserva (90% acerto, 13.6s).
+- **Config:** LLM_MODEL=gemma4:e4b em .env.example; LLM_PENSAR=false.
+- **Proximos passos:** R8 MCP proprio, R9 MCP comunidade, R10 skills, R11 guardrails, R12 Streamlit.
