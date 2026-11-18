@@ -165,6 +165,10 @@ def criar_grafo(modelo, max_msgs: int = MAX_MSGS, checkpointer=None, ferramentas
 
 def conversar(grafo, texto: str, thread_id: str) -> tuple[str, dict]:
     """Um turno. Devolve (resposta, estado final). O thread_id identifica a conversa."""
+    from .skills import filtro_prompt  # R11: guardrail de entrada
+    bloqueio = filtro_prompt(texto)
+    if bloqueio:
+        return bloqueio, {"bloqueado": "prompt longo", "ferramentas": [], "skills": ["filtro_prompt"], "truncada": False, "messages": [HumanMessage(texto), AIMessage(bloqueio)]}
     cfg = {"configurable": {"thread_id": thread_id}}
     out = grafo.invoke({"messages": [HumanMessage(texto)]}, cfg)
     return str(out["messages"][-1].content), out
