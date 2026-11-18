@@ -17,6 +17,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 from cgu_rag.agente.ferramentas import criar_buscador, criar_ferramenta_consulta
 from cgu_rag.agente.grafo import conversar, criar_grafo
 from cgu_rag.agente.mcp_comunidade import criar_ferramentas_web
+from cgu_rag.agente.mcp_transparencia import criar_ferramentas_transparencia
 from cgu_rag.agente.modelo import criar_modelo
 from cgu_rag.agente.skills import resumir_trecho
 
@@ -45,7 +46,7 @@ if "grafo" not in st.session_state:
             log.append(linhas)
             return linhas
 
-        ferramentas = [criar_ferramenta_consulta(buscador)] + criar_ferramentas_web() + [resumir_trecho]
+        ferramentas = [criar_ferramenta_consulta(buscador)] + criar_ferramentas_web() + criar_ferramentas_transparencia() + [resumir_trecho]
         st.session_state.grafo = criar_grafo(modelo, ferramentas=ferramentas)
         st.session_state.log = log
 
