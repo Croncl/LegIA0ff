@@ -23,11 +23,12 @@ def criar_ferramentas_web() -> list:
 @tool
 def buscar_web(consulta: str) -> str:
     """Busca na web via DuckDuckGo. Use para encontrar normas, portarias ou
-    notícias recentes sobre PAD, PAR e legislação federal que não estejam
-    no corpus local. Retorna títulos, URLs e snippets dos resultados.
+    notícias recentes sobre PAD, PAR, TAC (Termo de Ajustamento de Conduta),
+    Lei 8.112, Lei 12.846 e legislação federal que não estejam no corpus local.
+    Retorna títulos, URLs e snippets dos resultados.
 
     Args:
-        consulta: Termos de busca em português (ex: 'instrução normativa CGU 2024').
+        consulta: Termos de busca em português (ex: 'TAC Termo de Ajustamento de Conduta CGU').
     """
     try:
         from duckduckgo_search import DDGS
