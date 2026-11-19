@@ -33,6 +33,8 @@ PROMPT_RAG = (
     "empresas, licitações, prazos, ritos ou conceitos jurídicos, SEMPRE use a ferramenta consultar_base antes "
     "de responder. Se os trechos não responderem, reformule a consulta (outros termos, sinônimos, termo "
     "técnico) e consulte de novo, no máximo 3 consultas.\n"
+    "Se consultar_base não trouxer resultado, use buscar_web para procurar normas na internet. Se o usuário fornecer uma URL, use buscar_url.\n"
+    "Para sanções (CEIS/CNEP/CEPIM) use transparencia_sancoes; para PEP use transparencia_pep; para despesas federais use transparencia_despesas_favorecido; para dados de CNPJ use cnpj_consultar; para processos judiciais use cnpj_processos.\n"
     "Responda SOMENTE com base nos trechos, de forma direta: no máximo 3 frases, sem introdução e sem repetir "
     "a pergunta. NÃO escreva fonte nem página: o sistema as acrescenta.\n"
     "Se, depois de consultar, não houver evidência, responda apenas: Não encontrei nos documentos.\n"
