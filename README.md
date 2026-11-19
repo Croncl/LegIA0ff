@@ -187,3 +187,9 @@ Ver `docs/DECISOES.md` para o registro completo. Resumo:
 - RAG estruturado com LLMs autorregressivos
 - Extração automática de normativos do DOU via MCP
 - Compactação automática de histórico de conversas
+
+## Roadmap R14 — mcp-brasil (Fase 2)
+
+Substituir mcp_transparencia.py e mcp_comunidade.py pelo pacote [mcp-brasil](https://github.com/Mcp-Brasil/mcp-brasil):
+533 tools, 70 fontes de dados públicas brasileiras (transparência, judiciário, legislativo, saúde, educação, eleições e mais).
+Requer TRANSPARENCIA_API_KEY (gratuita) e DATAJUD_API_KEY (gratuita).
