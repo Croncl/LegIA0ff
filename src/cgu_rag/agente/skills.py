@@ -72,10 +72,13 @@ _STOPWORDS_PT = {
 
 _RESPOSTAS_LONGAS = [
     "Erro 404: Paciência não encontrada. Seja objetivo e resuma em 20 palavras ou menos!",
-    "Calma aí, Genos! Corta essa história pela metade e resuma em 20 palavras ou menos.",
-    "Saitama leu tudo isso em 0,001 segundos e ainda assim achou longo demais. 20 palavras, por favor.",
-    "King ouviu sua pergunta, ficou paralisado de susto e pediu para repetir em menos palavras.",
-    "Fubuki reuniu o Clã das Flores inteiro para ler isso. Resumo: era comprido demais.",
+    "Vai com calma, meu nobre, que esse seu PC da Xuxa não tanka.",
+    "You shall not pass! (Até porque essa GPU tá fritando um ovo neste exato momento).",
+    "Mestre dos Magos: procure a resposta está dentro de você...(sua CPU já pediu arrego).",
+    "Quem tem teto de vidro e processador Celeron não atira pedra no cluster dos outros.",
+    "Muito cavalo para pouco pasto e muita marra para pouca RAM livre!",
+    "Se achando o dono da cocada preta, mas o ventilador do gabinete parece uma turbina de Boeing.",
+    "Vixe! Com esse tamanho de prompt, até o disquete de 3 polegadas andava mais rápido.",
 ]
 
 
