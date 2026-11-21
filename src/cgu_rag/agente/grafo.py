@@ -22,24 +22,26 @@ from langgraph.prebuilt import ToolNode
 from .citacao import anexar_fonte
 
 PROMPT_SISTEMA = (
-    "Voce e um assistente sobre processos de correicao da CGU: processo administrativo disciplinar (PAD) "
-    "e processo administrativo de responsabilizacao (PAR). Responda em portugues, de forma direta, em no "
-    "maximo 3 frases. Se nao souber, diga que nao sabe."
+    "Assistente CGU: PAD e PAR. "
+    "Responda em português, direto, máximo 3 frases. "
+    "Se não souber, diga que não sabe."
 )
+
 PROMPT_RAG = (
-    "Você é um assistente sobre processos de correição da CGU: processo administrativo disciplinar (PAD) "
-    "e processo administrativo de responsabilização (PAR). Responda em português.\n"
-    "Para qualquer pergunta sobre normas, servidores públicos, processos disciplinares, responsabilização de "
-    "empresas, licitações, prazos, ritos ou conceitos jurídicos, SEMPRE use a ferramenta consultar_base antes "
-    "de responder. Se os trechos não responderem, reformule a consulta (outros termos, sinônimos, termo "
-    "técnico) e consulte de novo, no máximo 3 consultas.\n"
-    "Se consultar_base não trouxer resultado, use buscar_web para procurar normas na internet. Se o usuário fornecer uma URL, use buscar_url.\n"
-    "Para sanções (CEIS/CNEP/CEPIM) use transparencia_sancoes; para PEP use transparencia_pep; para despesas federais use transparencia_despesas_favorecido; para dados de CNPJ use cnpj_consultar; para processos judiciais use cnpj_processos.\n"
-    "Responda SOMENTE com base nos trechos, de forma direta: no máximo 3 frases, sem introdução e sem repetir "
-    "a pergunta. NÃO escreva fonte nem página: o sistema as acrescenta.\n"
-    "Se, depois de consultar, não houver evidência, responda apenas: Não encontrei nos documentos.\n"
-    "Para saudações e conversa simples, responda em uma frase, sem consultar."
+    "Assistente CGU: PAD e PAR. Responda em português, máximo 3 frases, sem introdução.\n"
+    "REGRAS:\n"
+    "- Perguntas jurídicas: use consultar_base SEMPRE. Se falhar, reformule (sinônimos) até 3x.\n"
+    "- Sem resultado no corpus: use buscar_web. Se usuário der URL: use buscar_url.\n"
+    "- Sanções/CEIS/CNEP/CEPIM: transparencia_sancoes. PEP: transparencia_pep.\n"
+    "- Despesas federais: transparencia_despesas_favorecido. CNPJ: cnpj_consultar ou cnpj_processos.\n"
+    "- Responda SÓ com base nos trechos. NÃO inclua fonte/página (o sistema acrescenta).\n"
+    "- Sem evidência após consultas: responda exatamente 'Não encontrei nos documentos.'\n"
+    "- Saudações: 1 frase, sem consultar.\n"
+    "Skills disponíveis (use sob demanda):\n"
+    "- resumir_trecho: quando o usuário pedir resumo ou o trecho for longo.\n"
+    "- filtro_prompt: aplicado automaticamente na entrada.\n"
 )
+
 MAX_MSGS = 10       # mensagens recentes enviadas ao modelo (o contexto do modelo local e limitado)
 MAX_CONSULTAS = 3   # consultas por turno; depois disso o modelo e obrigado a responder
 MAX_TOKENS_SAIDA = int(os.getenv("LLM_MAX_TOKENS", "300"))  # D-18: limite explicito, nunca corte silencioso
@@ -118,9 +120,16 @@ def criar_grafo(modelo, max_msgs: int = MAX_MSGS, checkpointer=None, ferramentas
     prompt = prompt or (PROMPT_RAG if ferramentas else PROMPT_SISTEMA)
 
     def entrada(estado: Estado) -> dict:
-        vazio = _humana_vazia(estado["messages"][-1])
-        return {"bloqueado": "mensagem vazia" if vazio else "", "ferramentas": [], "skills": [], "truncada": False}
-
+        msg = estado["messages"][-1]
+        vazio = _humana_vazia(msg)
+        if vazio:
+            return {"bloqueado": "mensagem vazia", "ferramentas": [], "skills": [], "truncada": False}
+        from .skills import filtro_prompt
+        bloqueio = filtro_prompt(str(msg.content))
+        if bloqueio:
+            return {"bloqueado": bloqueio, "ferramentas": [], "skills": ["filtro_prompt"], "truncada": False}
+        return {"bloqueado": "", "ferramentas": [], "skills": [], "truncada": False}
+    
     def responder(estado: Estado) -> dict:
         msgs = estado["messages"]
         usar = com_ferramentas if consultas_no_turno(msgs) < max_consultas else sem_ferramentas  # limite: sem ferramenta
@@ -136,11 +145,11 @@ def criar_grafo(modelo, max_msgs: int = MAX_MSGS, checkpointer=None, ferramentas
         if isinstance(ultima, AIMessage) and not ultima.tool_calls:
             meta = ultima.response_metadata or {}
             out["truncada"] = meta.get("finish_reason") == "length"
+            texto = guardrail_saida(str(ultima.content))
             if ferramentas:  # D-18: fonte e pagina anexadas pelo sistema, a partir dos trechos recuperados
-                texto = str(ultima.content)
-                novo = anexar_fonte(texto, trechos_do_turno(msgs))
-                if novo != texto:
-                    out["messages"] = [AIMessage(content=novo, id=ultima.id, response_metadata=meta)]
+                texto = anexar_fonte(texto, trechos_do_turno(msgs))
+            if texto != str(ultima.content):
+                out["messages"] = [AIMessage(content=texto, id=ultima.id, response_metadata=meta)]
         return out
 
     def rota_entrada(estado: Estado) -> str:
@@ -165,12 +174,15 @@ def criar_grafo(modelo, max_msgs: int = MAX_MSGS, checkpointer=None, ferramentas
     return g.compile(checkpointer=checkpointer or MemorySaver())
 
 
+def guardrail_saida(resposta: str) -> str:
+    """Bloqueia resposta vazia ou sem conteúdo útil."""
+    texto = resposta.strip() if resposta else ""
+    if len(texto) < 10:
+        return "⚠️ Não foi possível gerar uma resposta. Tente reformular a pergunta."
+    return texto
+
+
 def conversar(grafo, texto: str, thread_id: str) -> tuple[str, dict]:
-    """Um turno. Devolve (resposta, estado final). O thread_id identifica a conversa."""
-    from .skills import filtro_prompt  # R11: guardrail de entrada
-    bloqueio = filtro_prompt(texto)
-    if bloqueio:
-        return bloqueio, {"bloqueado": "prompt longo", "ferramentas": [], "skills": ["filtro_prompt"], "truncada": False, "messages": [HumanMessage(texto), AIMessage(bloqueio)]}
     cfg = {"configurable": {"thread_id": thread_id}}
     out = grafo.invoke({"messages": [HumanMessage(texto)]}, cfg)
     return str(out["messages"][-1].content), out

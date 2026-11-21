@@ -4,7 +4,7 @@ Skills do agente (R10).
 Skill A — resumir_trecho: resume um trecho normativo em até 3 bullet points.
 Skill C — filtro_prompt: guardrail de entrada que bloqueia prompts longos
            contando apenas palavras relevantes (sem stopwords), com respostas
-           bem-humoradas inspiradas em One-Punch Man.
+           bem-humoradas.
 
 Uso no grafo:
   from cgu_rag.agente.skills import filtro_prompt, resumir_trecho
@@ -60,14 +60,63 @@ def resumir_trecho(texto: str) -> str:
 
 # Stopwords mais comuns em português
 _STOPWORDS_PT = {
+    # -------------------------------------------------------------------
+    # 1. Conectivos e Pronomes Gerais 
+    # -------------------------------------------------------------------
     "a", "o", "as", "os", "um", "uma", "uns", "umas",
     "de", "do", "da", "dos", "das", "em", "no", "na", "nos", "nas",
     "por", "pelo", "pela", "pelos", "pelas", "para", "pra", "com", "sem",
     "e", "ou", "mas", "pois", "que", "se", "como", "quando", "onde",
     "eu", "tu", "ele", "ela", "nós", "vós", "eles", "elas",
     "me", "te", "se", "nos", "vos", "lhe", "lhes", "meu", "minha", "seu", "sua",
-    "é", "são", "foi", "eram", "ser", "está", "estão", "ter", "tem", "tinha",
     "isso", "isto", "aquilo", "esse", "essa", "este", "esta", "muito", "mais",
+    "algum", "alguma", "alguns", "algumas", "todo", "toda", "todos", "todas",
+    "outro", "outra", "outros", "outras", "qual", "quais", "quanto", "quanta",
+
+    # -------------------------------------------------------------------
+    # 2. Fórmulas de Praxe e "Burocracia" (Aparecem em todo documento)
+    # -------------------------------------------------------------------
+    "senhor", "senhora", "senhores", "senhoras", "ilustríssimo", "ilustre", 
+    "excelentíssimo", "excelentíssima", "prezado", "prezada", 
+    "atenciosamente", "respeitosamente", "cordialmente", "conforme", 
+    "consoante", "segundo", "destarte", "portanto", "outrossim", "ademais", 
+    "contudo", "entretanto", "todavia", "porém", "embora", "posto", 
+    "visto", "uma", "vez", "dessa", "desse", "disso", "nisso", "nesse", 
+    "nesta", "neste", "daquele", "daquela", "àquele", "àquela",
+
+    # -------------------------------------------------------------------
+    # 3. Referências Genéricas (O RAG já filtra pelo contexto)
+    # -------------------------------------------------------------------
+    "artigo", "art", "inciso", "parágrafo", "alínea", "item", "anexo", 
+    "página", "folha", "fls", "doc", "pdf", "referente", "referido", 
+    "supracitado", "mencionado", "citado", "acima", "abaixo", "seguinte", 
+    "anterior", "respectivo", "correspondente", "presente", "atual", 
+    "atualmente", "agora", "então", "após", "antes", "durante", "mediante", 
+    "através", "junto", "juntamente", "bem", "também", "ainda", "já",
+
+    # -------------------------------------------------------------------
+    # 4. Verbos de Ligação e Relato (Comuns em despachos e relatórios)
+    # -------------------------------------------------------------------
+    "é", "são", "foi", "eram", "ser", "está", "estão", "ter", "tem", "tinha",
+    "consta", "constam", "trata", "tratam", "refere", "referem", "versa", 
+    "versam", "informa", "informam", "relata", "relatam", "descreve", 
+    "descrevem", "solicita", "solicitam", "requer", "requerem", "encaminha", 
+    "encaminham", "sendo", "sido", "havia", "houve", "houver", "havendo",
+    
+    # -------------------------------------------------------------------
+    # 5. Palavras Genéricas de Tempo/Modo (CUIDADO: não incluir 'data', 'dia', 'prazo')
+    # -------------------------------------------------------------------
+    "mês", "meses", "ano", "anos", "horas", "forma", "formas", "modo", 
+    "maneira", "caso", "casos", "situação", "situações", "parte", "partes", 
+    "coisa", "coisas", "fato", "fatos", "vez", "vezes", "local", "locais",
+    "geral", "gerais", "específico", "específica", "determinado", "determinada",
+
+    # -------------------------------------------------------------------
+    # 6. Números por extenso e numerais romanos comuns
+    # -------------------------------------------------------------------
+    "um", "dois", "duas", "três", "quatro", "cinco", "seis", "sete", "oito", 
+    "nove", "dez", "vinte", "trinta", "cem", "mil", "i", "ii", "iii", "iv", 
+    "v", "vi", "vii", "viii", "ix", "x",
 }
 
 _RESPOSTAS_LONGAS = [
