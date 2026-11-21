@@ -19,7 +19,7 @@ from pathlib import Path
 from dotenv import load_dotenv
 
 import requests
-from langchain_core.tools import tool
+from langchain_core.tools import tool, ToolException
 
 # URLs Base oficiais
 _BASE_URL_TRANSPARENCIA = "https://api.mcp.ai/api/transparencia"
@@ -93,7 +93,7 @@ def transparencia_despesas_documentos(cpf_cnpj: str, ano: int = 2024, fase: str 
     }
     resultado = _chamar(_BASE_URL_TRANSPARENCIA, "despesas/documentos", payload)
     if "erro" in resultado:
-        return f"Erro na consulta: {resultado['erro']}"
+        raise ToolException(resultado["erro"])
     
     documentos = resultado.get("documentos", [])
     if not documentos:
@@ -136,7 +136,7 @@ def transparencia_despesas_favorecido(cpf_cnpj: str, mes_ano_inicio: str = None,
 
     resultado = _chamar(_BASE_URL_TRANSPARENCIA, "despesas/favorecido", payload)
     if "erro" in resultado:
-        return f"Erro na consulta: {resultado['erro']}"
+        raise ToolException(resultado["erro"])
     
     total = resultado.get("total", 0)
     if not total:
@@ -157,7 +157,7 @@ def transparencia_pep(cpf: str) -> str:
     """
     resultado = _chamar(_BASE_URL_TRANSPARENCIA, "pep", {"cpf": cpf})
     if "erro" in resultado:
-        return f"Erro na consulta: {resultado['erro']}"
+        raise ToolException(resultado["erro"])
     if not resultado.get("pep"):
         return f"{cpf}: não consta como Pessoa Exposta Politicamente."
         
@@ -179,7 +179,7 @@ def transparencia_sancoes(cpf_cnpj: str) -> str:
     """
     resultado = _chamar(_BASE_URL_TRANSPARENCIA, "sancoes", {"cpf_cnpj": cpf_cnpj})
     if "erro" in resultado:
-        return f"Erro na consulta: {resultado['erro']}"
+        raise ToolException(resultado["erro"])
         
     tem = resultado.get("tem_sancao", False)
     if not tem:

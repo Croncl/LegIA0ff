@@ -1,0 +1,38 @@
+{
+  "thread_id": "c69f1ab8-3ec3-49fa-951b-a37f8c81c6d4",
+  "inicio": "2026-11-21T15:38:17",
+  "mensagens": [
+    {
+      "role": "user",
+      "texto": "Consulte o CNPJ 02.608.411/0001-90 e verifique despesas públicas federais em 2024.\n",
+      "ts": "2026-11-21T15:38:17"
+    },
+    {
+      "role": "assistant",
+      "texto": "O CNPJ 02.608.411/0001-90 pertence à M M DE FARIAS MICROEMPRESA, está ativa e é classificada como Micro Empresa. Em relação às despesas públicas federais em 2024, não foram registradas transações para este CNPJ.",
+      "ts": "2026-11-21T15:38:17",
+      "meta": {
+        "ferramentas": [
+          {
+            "nome": "cnpj_consultar",
+            "args": {
+              "cnpj": "02.608.411/0001-90"
+            },
+            "status": "success"
+          },
+          {
+            "nome": "transparencia_despesas_favorecido",
+            "args": {
+              "cpf_cnpj": "02.608.411/0001-90",
+              "mes_ano_fim": "12/2024",
+              "mes_ano_inicio": "01/2024"
+            },
+            "status": "success"
+          }
+        ],
+        "skills": [],
+        "truncada": false
+      }
+    }
+  ]
+}

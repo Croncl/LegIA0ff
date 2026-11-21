@@ -10,6 +10,7 @@ import sys
 import uuid
 from datetime import datetime
 from pathlib import Path
+from langchain_core.messages import HumanMessage, RemoveMessage
 
 import streamlit as st
 
@@ -21,15 +22,54 @@ from cgu_rag.agente.mcp_comunidade import criar_ferramentas_web
 from cgu_rag.agente.mcp_transparencia import criar_ferramentas_transparencia
 from cgu_rag.agente.modelo import criar_modelo
 from cgu_rag.agente.skills import resumir_trecho
-
 from ui_estilo import (
     aplicar_estilo,
     renderizar_cabecalho,
     renderizar_detalhes_execucao,
     renderizar_mensagem,
     renderizar_sidebar_config,
+    renderizar_trace,
 )
 from ui_grafo import renderizar_mapa_conhecimento
+
+
+
+@st.cache_resource(show_spinner="Carregando modelo e base de documentos...")
+def _inicializar_agente():
+    """Cria o grafo uma única vez (cache do Streamlit). Retorna (grafo, log, nomes_ferramentas)."""
+    try:
+        modelo = criar_modelo()
+        buscador_base = criar_buscador()
+        log: list = []
+        def buscador(q: str, k: int):
+            linhas = buscador_base(q, k)
+            log.append(linhas)
+            return linhas
+        ferramentas_lista = (
+            [criar_ferramenta_consulta(buscador)]
+            + criar_ferramentas_web()
+            + criar_ferramentas_transparencia()
+            + [resumir_trecho]
+        )
+        
+        # Diagnóstico granular
+        try:
+            grafo = criar_grafo(modelo, ferramentas=ferramentas_lista)
+            if grafo is None:
+                raise RuntimeError("criar_grafo() retornou None")
+        except Exception as e:
+            import traceback
+            st.error(f"❌ Erro ao criar o grafo: {type(e).__name__}: {e}")
+            st.code(traceback.format_exc(), language="text")
+            raise
+        
+        nomes = [f.name for f in ferramentas_lista] + ["filtro_prompt"]
+        return grafo, log, nomes
+    except Exception as e:
+        import traceback
+        st.error(f"❌ Erro na inicialização: {type(e).__name__}: {e}")
+        st.code(traceback.format_exc(), language="text")
+        raise
 
 # ---------------------------------------------------------------------------
 st.set_page_config(
@@ -44,41 +84,31 @@ HISTORICO_DIR = Path("data/historico_chats")
 HISTORICO_DIR.mkdir(parents=True, exist_ok=True)
 
 # ---------------------------------------------------------------------------
-# Inicialização do session_state
+# Inicialização do session_state (Garantia absoluta de existência)
 # ---------------------------------------------------------------------------
 if "thread_id" not in st.session_state:
     st.session_state.thread_id = str(uuid.uuid4())
 if "historico" not in st.session_state:
     st.session_state.historico = []
-if "status_chats" not in st.session_state:      # <--- NOVO
-    st.session_state.status_chats = {}          # <--- NOVO
+if "status_chats" not in st.session_state:
+    st.session_state.status_chats = {}
 if "retry" not in st.session_state:
     st.session_state.retry = False
 if "pergunta_retry" not in st.session_state:
     st.session_state.pergunta_retry = None
 
-if "grafo" not in st.session_state:
-    with st.spinner("Carregando modelo e base de documentos..."):
-        modelo = criar_modelo()
-        buscador_base = criar_buscador()
-        log: list = []
-
-        def buscador(q: str, k: int):
-            linhas = buscador_base(q, k)
-            log.append(linhas)
-            return linhas
-
-        ferramentas_lista = (
-            [criar_ferramenta_consulta(buscador)]
-            + criar_ferramentas_web()
-            + criar_ferramentas_transparencia()
-            + [resumir_trecho]
-        )
-
-        st.session_state.grafo = criar_grafo(modelo, ferramentas=ferramentas_lista)
-        st.session_state.log = log
-        st.session_state.ferramentas_nomes = [f.name for f in ferramentas_lista] + ["filtro_prompt"]
-
+# Inicialização robusta do agente via cache
+if st.session_state.get("grafo") is None:
+    try:
+        _grafo, _log, _nomes = _inicializar_agente()
+        st.session_state.grafo = _grafo
+        st.session_state.log = _log
+        st.session_state.ferramentas_nomes = _nomes
+    except Exception as e:
+        import traceback
+        st.error(f"❌ Falha ao inicializar o agente: {type(e).__name__}: {e}")
+        st.code(traceback.format_exc(), language="text")
+        st.stop()
 
 # ---------------------------------------------------------------------------
 # Persistência
@@ -140,6 +170,27 @@ def excluir_chat(thread_id: str) -> None:
         st.session_state.thread_id = str(uuid.uuid4())
         st.session_state.historico = []
 
+def excluir_turno(idx_user: int) -> None:
+    """Remove a N-ésima pergunta (0-based) e sua resposta, na tela e no grafo."""
+    hist = st.session_state.historico
+    pos = [i for i, m in enumerate(hist) if m["role"] == "user"]
+    ini = pos[idx_user]
+    fim = pos[idx_user + 1] if idx_user + 1 < len(pos) else len(hist)
+    del hist[ini:fim]
+
+    cfg = {"configurable": {"thread_id": st.session_state.thread_id}}
+    try:
+        msgs = st.session_state.grafo.get_state(cfg).values.get("messages", [])
+        humanas = [i for i, m in enumerate(msgs) if isinstance(m, HumanMessage)]
+        if idx_user < len(humanas):
+            a = humanas[idx_user]
+            b = humanas[idx_user + 1] if idx_user + 1 < len(humanas) else len(msgs)
+            st.session_state.grafo.update_state(
+                cfg, {"messages": [RemoveMessage(id=m.id) for m in msgs[a:b]]}
+            )
+    except Exception:
+        pass
+    salvar_historico()
 
 def acao_renderizar_lista_chats() -> None:
     chats = carregar_chats_salvos()
@@ -200,7 +251,18 @@ with col_side:
         on_nova_conversa=acao_nova_conversa,
         on_carregar_chat=acao_renderizar_lista_chats,
     )
-
+    # Botão de emergência — desbloqueia chat travado
+    if st.session_state.status_chats.get(st.session_state.thread_id) == "processing":
+        if st.button("🔓 Desbloquear chat", key="btn_desbloquear"):
+            st.session_state.status_chats[st.session_state.thread_id] = "idle"
+            st.rerun()
+    # Botão de emergência global — desbloqueia todos os chats travados
+    chats_travados = [tid for tid, s in st.session_state.status_chats.items() if s == "processing"]
+    if chats_travados:
+        if st.button(f"🔓 Desbloquear todos ({len(chats_travados)})", key="btn_desbloquear_todos"):
+            for tid in chats_travados:
+                st.session_state.status_chats[tid] = "idle"
+            st.rerun()
 with col_main:
     renderizar_cabecalho()
 
@@ -249,13 +311,32 @@ with col_main:
     renderizar_mapa_conhecimento(st.session_state.historico, top_n=40)
 
     # Histórico
+    idx_user = -1
     for msg in st.session_state.historico:
-        renderizar_mensagem(msg)
+        if msg["role"] == "user":
+            idx_user += 1
+            col_msg, col_x = st.columns([12, 1])
+            with col_msg:
+                renderizar_mensagem(msg)
+            with col_x:
+                if st.button(
+                    "✖",
+                    key=f"del_turno_{st.session_state.thread_id}_{idx_user}",
+                    help="Excluir esta pergunta e resposta (inclusive do contexto do modelo)",
+                    disabled=esta_processando,
+                ):
+                    excluir_turno(idx_user)
+                    st.rerun()
+        else:
+            renderizar_mensagem(msg)
 
     # --- LÓGICA DE STATUS POR CHAT ---
     current_thread = st.session_state.thread_id
     status_atual = st.session_state.status_chats.get(current_thread, "idle")
     esta_processando = (status_atual == "processing")
+
+    if esta_processando:
+        st.markdown("🔄 Analisando documentos...")
 
     # Botão retry — aparece só quando a última mensagem é do assistente E o chat está livre
     if (
@@ -268,8 +349,11 @@ with col_main:
                 (m["texto"] for m in reversed(st.session_state.historico) if m["role"] == "user"),
                 None,
             )
-            st.session_state.historico.pop()
+            st.session_state.historico.pop()  # resposta
+            if st.session_state.historico and st.session_state.historico[-1]["role"] == "user":
+                st.session_state.historico.pop()  # pergunta (será re-adicionada)
             st.session_state.pergunta_retry = ultima_pergunta
+            st.session_state.retry_limpar = True
             st.rerun()
 
     # Input: desabilita APENAS se o chat atual estiver processando
@@ -285,47 +369,31 @@ with col_main:
 
     # --- PROCESSAMENTO DA PERGUNTA ---
     if pergunta and not esta_processando:
-        # 1. Marca o status deste chat como processando
         st.session_state.status_chats[current_thread] = "processing"
-        
-        # 2. Adiciona a mensagem do usuário
         ts = datetime.now().isoformat(timespec="seconds")
         st.session_state.historico.append({"role": "user", "texto": pergunta, "ts": ts})
-        with st.chat_message("user"):
-            st.markdown(pergunta)
-
-        # 3. Cria o placeholder do assistente e roda o spinner
-        with st.chat_message("assistant"):
-            placeholder_resposta = st.empty()
-            with placeholder_resposta.container():
+        try:
+            with st.chat_message("user"):
+                st.markdown(pergunta)
+            with st.chat_message("assistant"):
                 with st.spinner("Analisando documentos e consultando ferramentas..."):
                     resposta, estado = conversar(
-                        st.session_state.grafo,
-                        pergunta,
-                        current_thread,
+                        st.session_state.grafo, pergunta, current_thread
                     )
-            
-            # 4. Substitui o spinner pela resposta final
-            placeholder_resposta.markdown(resposta)
-            
             meta_msg = {
                 "ferramentas": estado.get("ferramentas", []),
                 "skills": estado.get("skills", []),
                 "truncada": estado.get("truncada", False),
+                "bloqueado": estado.get("bloqueado", ""),
             }
-            renderizar_detalhes_execucao(meta_msg)
-
-        # 5. Salva no histórico e libera o chat
-        st.session_state.historico.append({
-            "role": "assistant",
-            "texto": resposta,
-            "ts": ts,
-            "meta": meta_msg,
-        })
-        salvar_historico()
-        
-        # Limpa o status deste chat específico
-        st.session_state.status_chats[current_thread] = "idle"
-        
-        # Força atualização para habilitar o input novamente
+            st.session_state.historico.append(
+                {"role": "assistant", "texto": resposta, "ts": ts, "meta": meta_msg}
+            )
+            salvar_historico()
+        except Exception as e:
+            st.session_state.historico.append(
+                {"role": "assistant", "texto": f"❌ Erro: {type(e).__name__}: {e}", "ts": ts}
+            )
+        finally:
+            st.session_state.status_chats[current_thread] = "idle"
         st.rerun()

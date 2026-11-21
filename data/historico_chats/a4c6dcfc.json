@@ -1,0 +1,76 @@
+{
+  "thread_id": "a4c6dcfc-a617-4d6d-add1-bb015c07d341",
+  "inicio": "2026-11-21T16:18:22",
+  "mensagens": [
+    {
+      "role": "user",
+      "texto": " Empresas sancionadas em PAR pela CGU?",
+      "ts": "2026-11-21T16:18:22"
+    },
+    {
+      "role": "assistant",
+      "texto": "Existem precedentes de desconsideração da personalidade jurídica no âmbito do PAR, como no caso da ARATEC ENGENHARIA, CONSULTORIA & REPRESENTAÇÕES LTDA., devido ao abuso de direito. Outros casos citados incluem VISION MÍDIA EPROPAGANDA LTDA., PACATU CULTURA, EDUCAÇÃO E AVIAÇÃO LTDA., INTERCAPITAL BELAS ARTES LTDA. e LOGÍSTICA PLANEJAMENTO CULTURAL LTDA., onde a comissão entendeu haver provas para a extensão de efeitos sancionatórios. O PAR também pode resultar na fixação de multas, como no caso do PAR nº 00190.107206/2023-74.\n\nFonte: Manual PAR 3ª ed., págs 136-139",
+      "ts": "2026-11-21T16:18:22",
+      "meta": {
+        "ferramentas": [
+          {
+            "nome": "consultar_base",
+            "args": {
+              "consulta": "empresas sancionadas em PAR CGU"
+            },
+            "status": "success"
+          }
+        ],
+        "skills": [],
+        "truncada": false
+      }
+    },
+    {
+      "role": "user",
+      "texto": "casos citados incluem VISION MÍDIA EPROPAGANDA LTDA., PACATU CULTURA, EDUCAÇÃO E AVIAÇÃO LTDA., INTERCAPITAL BELAS ARTES LTDA. ",
+      "ts": "2026-11-21T16:29:23"
+    },
+    {
+      "role": "assistant",
+      "texto": "Para consultar os dados cadastrais dessas empresas, por favor, forneça o CNPJ de cada uma delas.",
+      "ts": "2026-11-21T16:29:23",
+      "meta": {
+        "ferramentas": [],
+        "skills": [],
+        "truncada": false,
+        "bloqueado": ""
+      }
+    },
+    {
+      "role": "user",
+      "texto": "asos citados incluem VISION MÍDIA EPROPAGANDA LTDA., busque o cnpj e con sulte os socios",
+      "ts": "2026-11-21T16:30:14"
+    },
+    {
+      "role": "assistant",
+      "texto": "O CNPJ da VISION MIDIA E PROPAGANDA LTDA. é 10.435.582/0001-92, e a empresa está com situação INAPTA. Os sócios-administradores cadastrados são ALVARO LUIS PADILLA VICTORICA e ZULEICA AMORIM.",
+      "ts": "2026-11-21T16:30:14",
+      "meta": {
+        "ferramentas": [
+          {
+            "nome": "buscar_web",
+            "args": {
+              "consulta": "VISION MÍDIA EPROPAGANDA LTDA. CNPJ"
+            },
+            "status": "success"
+          },
+          {
+            "nome": "cnpj_consultar",
+            "args": {
+              "cnpj": "10.435.582000192"
+            },
+            "status": "success"
+          }
+        ],
+        "skills": [],
+        "truncada": false,
+        "bloqueado": ""
+      }
+    }
+  ]
+}

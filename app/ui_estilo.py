@@ -25,6 +25,8 @@ import json
 import random
 from typing import Iterable
 
+from cgu_rag.config import settings
+
 import streamlit as st
 
 # ---------------------------------------------------------------------------
@@ -161,6 +163,18 @@ EMOJIS = {
     "transparencia_despesas_documentos": "📄",
     "cnpj_consultar": "🏢",
     "cnpj_processos": "⚖️",
+}
+TIPO_TOOL = {
+    "consultar_base": "Base local (RAG)",
+    "buscar_web": "Web (DuckDuckGo)",
+    "buscar_url": "Web (leitura de URL)",
+    "resumir_trecho": "Skill",
+    "transparencia_sancoes": "Transparência (REST)",
+    "transparencia_pep": "Transparência (REST)",
+    "transparencia_despesas_favorecido": "Transparência (REST)",
+    "transparencia_despesas_documentos": "Transparência (REST)",
+    "cnpj_consultar": "CNPJ (REST)",
+    "cnpj_processos": "CNPJ (REST)",
 }
 
 # ---------------------------------------------------------------------------
@@ -894,11 +908,11 @@ def renderizar_sidebar_config(
         # Info do corpus/modelo
         st.markdown("### 📚 Corpus & Modelo")
         st.markdown(
-            """
+            f"""
             <div class="cg-card-muted">
                 <div><strong>Corpus:</strong> 6 PDFs · 1567 trechos</div>
                 <div style="margin-top:6px"><strong>Modelo:</strong>
-                <code>gemma4:e4b</code>
+                <code>{settings.llm_model}</code>
                 <span style="font-size:0.85rem">(Ollama local)</span></div>
             </div>
             """,
@@ -914,7 +928,8 @@ def renderizar_sidebar_config(
 
 def renderizar_detalhes_execucao(meta: dict) -> None:
     """Expander com ferramentas, skills e status de truncamento."""
-    ferramentas_usadas = meta.get("ferramentas", [])
+    todas = meta.get("ferramentas", [])
+    ferramentas_usadas = [c for c in todas if c.get("nome") != "resumir_trecho"]
     skills_usadas = meta.get("skills", [])
     truncada = meta.get("truncada", False)
 
@@ -923,18 +938,19 @@ def renderizar_detalhes_execucao(meta: dict) -> None:
 
     with st.expander("ℹ️ Detalhes da execução", expanded=False):
         if ferramentas_usadas:
-            st.markdown("**Consultas realizadas:**")
+            st.markdown(f"**Ferramentas utilizadas ({len(ferramentas_usadas)}):**")
             for c in ferramentas_usadas:
                 nome_tool = c.get("nome", "ferramenta")
+                tipo = TIPO_TOOL.get(nome_tool, "Outra")
                 args_tool = c.get("args", {})
+                icone = "✅" if c.get("status", "success") == "success" else "❌"
                 st.markdown(
-                    f'<div class="cg-tool-row">{badge(nome_tool, "cyan")}</div>',
+                    f'<div class="cg-tool-row"><span aria-hidden="true">{icone}</span> '
+                    f'{badge(nome_tool, "cyan")} <small>{tipo}</small></div>',
                     unsafe_allow_html=True,
                 )
-                if isinstance(args_tool, dict):
-                    st.code(json.dumps(args_tool, ensure_ascii=False, indent=2), language="json")
-                else:
-                    st.code(str(args_tool), language="text")
+                st.code(json.dumps(args_tool, ensure_ascii=False, indent=2)
+                        if isinstance(args_tool, dict) else str(args_tool), language="json")
 
         if skills_usadas:
             st.markdown(f"**Skills:** {badges_html(skills_usadas, 'muted')}", unsafe_allow_html=True)
@@ -951,4 +967,39 @@ def renderizar_mensagem(msg: dict) -> None:
     with st.chat_message(msg["role"]):
         st.markdown(msg["texto"])
         if msg["role"] == "assistant" and msg.get("meta"):
+            renderizar_trace(msg["meta"])
             renderizar_detalhes_execucao(msg["meta"])
+            
+def renderizar_trace(estado: dict) -> None:
+    """Renderiza um trace simplificado e visual do fluxo de execução do agente."""
+    ferramentas = estado.get("ferramentas", [])
+    skills = estado.get("skills", [])
+    bloqueado = estado.get("bloqueado", "")
+
+    with st.expander("🔍 Ver passo a passo do raciocínio (Trace)", expanded=False):
+        st.markdown("📝 **Fluxo de Execução:**")
+        
+        if bloqueado:
+            st.error(f"🛑 **Bloqueio de Segurança:** {bloqueado}")
+            return
+
+        st.markdown("1️⃣ **Entrada:** Pergunta do usuário recebida e validada.")
+
+        if not ferramentas and not skills:
+            st.markdown("2️⃣ **Decisão do Modelo:** Responder diretamente com conhecimento interno (sem consultar ferramentas).")
+        else:
+            st.markdown("2️⃣ **Decisão do Modelo:** Acionar ferramentas e/ou skills.")
+            for f in ferramentas:
+                icone = "✅" if f.get("status", "success") == "success" else "❌"
+                args_str = ", ".join(f"{k}='{v}'" if isinstance(v, str) else f"{k}={v}"
+                                     for k, v in f.get("args", {}).items())
+                st.markdown(f"   - {icone} 🛠️ **Ferramenta:** `{f['nome']}` ({args_str})")
+            for s in skills:
+                st.markdown(f"   - ⚡ **Skill:** `{s}`")
+
+        if ferramentas:
+            ok = sum(f.get("status", "success") == "success" for f in ferramentas)
+            falhas = len(ferramentas) - ok
+            st.markdown(f"3️⃣ **Execução:** {ok}/{len(ferramentas)} chamadas concluídas"
+                        + (f" ({falhas} com erro)." if falhas else "."))
+        st.markdown("4️⃣ **Síntese:** Modelo processou os resultados e gerou a resposta final (com fontes anexadas pelo sistema).")

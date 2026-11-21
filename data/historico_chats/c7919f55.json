@@ -1,0 +1,62 @@
+{
+  "thread_id": "c7919f55-9dfb-4f9c-a72b-5e3a4a09f4ae",
+  "inicio": "2026-11-21T15:54:45",
+  "mensagens": [
+    {
+      "role": "user",
+      "texto": "Quais são as últimas notícias sobre a CPI ou CPMI instaurada no Senado para investigar o caso do Banco Master?",
+      "ts": "2026-11-21T15:54:45"
+    },
+    {
+      "role": "user",
+      "texto": "Quais são as últimas notícias sobre a CPI ou CPMI instaurada no Senado para investigar o caso do Banco Master?",
+      "ts": "2026-11-21T15:55:23"
+    },
+    {
+      "role": "assistant",
+      "texto": "Não encontrei nos documentos.",
+      "ts": "2026-11-21T15:55:23",
+      "meta": {
+        "ferramentas": [
+          {
+            "nome": "buscar_web",
+            "args": {
+              "consulta": "CPI CPMI Senado Banco Master últimas notícias"
+            },
+            "status": "success"
+          }
+        ],
+        "skills": [],
+        "truncada": false
+      }
+    },
+    {
+      "role": "user",
+      "texto": "\"Qual é o valor total do rombo financeiro estimado do Banco Master e quanto o FGC já desembolsou para cobrir as perdas?",
+      "ts": "2026-11-21T15:55:57"
+    },
+    {
+      "role": "user",
+      "texto": "\"Qual é o valor total do rombo financeiro estimado do Banco Master e quanto o FGC já desembolsou para cobrir as perdas?",
+      "ts": "2026-11-21T15:57:01"
+    },
+    {
+      "role": "assistant",
+      "texto": "Não encontrei nos documentos.",
+      "ts": "2026-11-21T15:57:01",
+      "meta": {
+        "ferramentas": [
+          {
+            "nome": "buscar_web",
+            "args": {
+              "consulta": "Banco Master rombo financeiro FGC desembolso"
+            },
+            "status": "success"
+          }
+        ],
+        "skills": [],
+        "truncada": false
+      }
+    }
+  ]
+}

@@ -1,0 +1,60 @@
+{
+  "thread_id": "d1282427-59c8-49cd-b449-211656d7d009",
+  "inicio": "2026-11-21T14:21:58",
+  "mensagens": [
+    {
+      "role": "user",
+      "texto": "O que caracteriza o assédio moral no serviço público federal?",
+      "ts": "2026-11-21T14:21:58"
+    },
+    {
+      "role": "assistant",
+      "texto": "O assédio moral é conduta imprópria nas relações interpessoais de trabalho, praticada no exercício da função ou a pretexto dela, no âmbito da repartição pública, que contribui, mesmo de forma leve, para a deterioração do ambiente de trabalho. Pode ser enquadrado no art. 132, inciso V da Lei nº 8.112/1990, dependendo do caso concreto, e condutas ofensivas à dignidade sexual são puníveis com demissão. Para penalidade máxima, a gravidade da conduta deve ser robustamente comprovada.\n\nFonte: Ementário 3ª ed. (NT 93/2024), pág. 147; Ementário 2ª ed. (NT 93/2024), pág. 126",
+      "ts": "2026-11-21T14:21:58",
+      "meta": {
+        "ferramentas": [
+          {
+            "nome": "consultar_base",
+            "args": {
+              "consulta": "assédio moral no serviço público federal"
+            }
+          }
+        ],
+        "skills": [],
+        "truncada": false
+      }
+    },
+    {
+      "role": "user",
+      "texto": "O CPF 123.456.789-00 possui sanções no CEIS?\n",
+      "ts": "2026-11-21T14:25:05"
+    },
+    {
+      "role": "assistant",
+      "texto": "Não há sanções registradas para o CPF 123.456.789-00 no CEIS/CNEP/CEPIM.",
+      "ts": "2026-11-21T14:25:05",
+      "meta": {
+        "ferramentas": [
+          {
+            "nome": "transparencia_sancoes",
+            "args": {
+              "cpf_cnpj": "123.456.789-00"
+            }
+          }
+        ],
+        "skills": [],
+        "truncada": false
+      }
+    },
+    {
+      "role": "user",
+      "texto": "consulta esse cpf 04566461912, o que tem sobvre ele na internet?",
+      "ts": "2026-11-21T14:29:00"
+    },
+    {
+      "role": "user",
+      "texto": "o que diz a Lei nº 12.250 sobre assedio moral?",
+      "ts": "2026-11-21T14:57:12"
+    }
+  ]
+}

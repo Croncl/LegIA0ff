@@ -12,8 +12,23 @@ Uso no grafo (em criar_grafo):
 """
 from __future__ import annotations
 
-from langchain_core.tools import tool
+from langchain_core.tools import tool, ToolException
 
+import ipaddress
+import socket
+from urllib.parse import urlparse
+
+
+def _url_segura(url: str) -> bool:
+    """Aceita só http/https e recusa endereços internos (evita SSRF)."""
+    p = urlparse(url)
+    if p.scheme not in ("http", "https") or not p.hostname:
+        return False
+    try:
+        ip = ipaddress.ip_address(socket.gethostbyname(p.hostname))
+    except OSError:
+        return False
+    return not (ip.is_private or ip.is_loopback or ip.is_link_local)
 
 def criar_ferramentas_web() -> list:
     """Retorna [buscar_web, buscar_url] prontas para o grafo."""
@@ -30,29 +45,39 @@ def buscar_web(consulta: str) -> str:
     Args:
         consulta: Termos de busca em português (ex: 'TAC Termo de Ajustamento de Conduta CGU').
     """
-    try:
-        from duckduckgo_search import DDGS
-        with DDGS() as ddg:
-            resultados = list(ddg.text(consulta, max_results=5))
-        if not resultados:
-            return "Nenhum resultado encontrado."
-        linhas = []
-        for i, r in enumerate(resultados, 1):
-            linhas.append(f"[{i}] {r.get('title', '')}\n{r.get('href', '')}\n{r.get('body', '')[:300]}")
-        return "\n\n".join(linhas)
-    except Exception as e:
-        return f"Erro na busca web: {e}"
-
+    import time
+    ultimo_erro = None
+    for tentativa in range(6):
+        try:
+            from ddgs import DDGS
+            resultados = list(DDGS().text(consulta, region="br-pt", backend="auto", max_results=5))
+            if resultados:
+                linhas = []
+                for i, r in enumerate(resultados, 1):
+                    linhas.append(f"[{i}] {r.get('title', '')}\n{r.get('href', '')}\n{r.get('body', '')[:300]}")
+                return "\n\n".join(linhas)
+        except Exception as e:
+            ultimo_erro = e
+        time.sleep(1.5 * (tentativa + 1))
+    if ultimo_erro and "No results found" not in str(ultimo_erro):
+        raise ToolException(f"Erro na busca web: {ultimo_erro}")
+    return "Nenhum resultado encontrado. Tente reformular com menos palavras (2 a 4 termos)."
 
 @tool
-def buscar_url(url: str) -> str:
+def buscar_url(url: str, offset: int = 0) -> str:
     """Lê o conteúdo de uma URL (Diário Oficial, LegisWeb, CGU, Planalto).
     Use após buscar_web para ler o texto completo de uma norma ou portaria.
-    Retorna os primeiros 2000 caracteres do conteúdo.
+    Retorna 4000 caracteres do conteúdo por chamada, a partir de `offset`.
+    Se o texto continuar, o final indica o próximo offset a usar.
 
     Args:
         url: URL completa (https://...).
+        offset: Posição inicial em caracteres (0 = começo). Use o offset indicado no fim da resposta anterior para continuar a leitura.
     """
+    if not _url_segura(url):
+        raise ToolException(
+            "URL recusada: use apenas endereços http:// ou https:// públicos."
+        )
     try:
         import urllib.request
         import urllib.error
@@ -92,7 +117,17 @@ def buscar_url(url: str) -> str:
 
         extrator = _Extrator()
         extrator.feed(html)
-        texto = extrator.texto()[:2000]
-        return texto or "[Conteúdo não extraível]"
+        completo = extrator.texto()
+        if not completo:
+            return "[Conteúdo não extraível]"
+        TAM = 4000
+        offset = max(0, offset)
+        if offset >= len(completo):
+            return f"[Fim do conteúdo: o texto tem {len(completo)} caracteres.]"
+        trecho = completo[offset:offset + TAM]
+        fim = offset + len(trecho)
+        if fim < len(completo):
+            trecho += f"\n\n[Continua. Para ler mais, chame buscar_url com offset={fim}.]"
+        return trecho
     except Exception as e:
-        return f"Erro ao buscar URL: {e}"
+        raise ToolException(f"Erro ao buscar URL: {e}")
