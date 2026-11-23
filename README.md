@@ -55,6 +55,7 @@ Pergunta do usuário
                    │  nó: responder  │
                    └─────────────────┘
 ```
+[![Architecture diagram of croncl/legia0ff](https://gitdiagram.com/croncl/legia0ff/diagram.png)](https://gitdiagram.com/croncl/legia0ff?utm_source=readme&utm_medium=picture)
 
 **Função de cada nó:**
 - `entrada`: normaliza o turno, aplica guardrails de entrada (mensagem vazia + prompt longo)
