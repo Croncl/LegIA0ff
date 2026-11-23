@@ -133,38 +133,21 @@ data/
 
 **Requisitos:** Python 3.11, [Ollama](https://ollama.com) instalado e rodando.
 
-```bash
-# 1. Clone e instale
+### Windows
+
+```powershell
+# 1. Clone o repositório
 git clone https://github.com/Croncl/LegIA0ff
-
-INSTALACAO DO MINICONDA
-~/miniconda3/bin/conda init bash
-source ~/.bashrc
-
-
 cd LegIA0ff
-python -m pip install -e ".[dev]"
 
-# 2. Configuração
-conda create -n legia0ff python=3.11 
-conda activate legia0ff
-
-#cp .env.example .env
-# Edite .env se necessário (padrão: gemma4:e4b, Ollama local)
+# 2. Configuração automática (cria env conda, instala dependências e .env)
+./configurar-cgu-rag.ps1
 
 # 3. Modelo
 ollama pull gemma4:e4b
 
-windows 
-executar: configurar-cgu-rag.ps1
-
-linux 
-executar: configurar-cgu-rag.sh
-
-chmod +x configurar-cgu-rag.sh
-./configurar-cgu-rag.sh
-
-# 4. Corpus (coloque os PDFs da CGU em data/pdfs/ e ingira)
+# 4. Corpus (coloque os PDFs em data/pdfs/ e ingira)
+conda activate legia0ff
 python scripts/ingerir.py
 
 # 5. Testes
@@ -174,15 +157,51 @@ pytest
 streamlit run app/app.py
 ```
 
+### Linux / Debian
+
+```bash
+# 1. Clone o repositório
+git clone https://github.com/Croncl/LegIA0ff
+cd LegIA0ff
+
+# 2. Instalar Miniconda (se necessário)
+wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh
+bash Miniconda3-latest-Linux-x86_64.sh
+~/miniconda3/bin/conda init bash
+source ~/.bashrc
+
+# 3. Configuração automática
+chmod +x configurar-cgu-rag.sh
+./configurar-cgu-rag.sh
+
+# 4. Modelo
+ollama pull gemma4:e4b
+
+# 5. Corpus (coloque os PDFs em data/pdfs/ e ingira)
+conda activate legia0ff
+python scripts/ingerir.py
+
+# 6. Testes
+pytest
+
+# 7. UI
+streamlit run app/app.py
+```
+
+> **Verificação do modelo ativo:** `ollama ps` no terminal, ou veja o rodapé da sidebar na UI.
+
 **Variáveis de ambiente (`.env`):**
 
 | Variável | Padrão | Descrição |
 |---|---|---|
 | `LLM_MODEL` | `gemma4:e4b` | Modelo Ollama |
-| `LLM_PENSAR` | `false` | Raciocínio interno |
-| `LLM_MAX_TOKENS` | `300` | Limite de tokens de saída |
-| `OLLAMA_BASE_URL` | `http://localhost:11434` | Endpoint Ollama |
-
+| `LLM_BASE_URL` | `http://localhost:11434/v1` | Endpoint Ollama |
+| `LLM_API_KEY` | `ollama` | Chave (fixo para Ollama local) |
+| `SIGILO` | `sigiloso` | `sigiloso` = só local; `publico` = permite API externa |
+| `RAG_DB` | `data/rag_cgu.db` | Caminho do banco SQLite |
+| `RAG_EMB_MODEL` | `intfloat/multilingual-e5-small` | Modelo de embeddings |
+| `MCP_AI_KEY` | _(vazio)_ | Chave MCP.ai (opcional) |
+| `TRANSPARENCIA_API_KEY` | _(vazio)_ | Chave Transparência (opcional) |
 ---
 
 ## Modelos Testados
