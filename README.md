@@ -42,9 +42,10 @@ Pergunta do usuário
                    ┌─────────────────┐  ┌──────────────┐
                    │ nó: ferramentas │  │  nó: saida   │ ← guardrail de saída
                    │ consultar_base  │  │  citacao.py  │   resposta vazia → aviso
-                   │ buscar_web      │  │  ≤300 tokens │
+                   │ buscar_web      │  │  ≤500 tokens │
                    │ buscar_url      │  └──────────────┘
                    │ resumir_trecho  │
+                   │ resumir_conversa│
                    │ transparencia_* │
                    │ cnpj_*          │
                    └────────┬────────┘
@@ -78,6 +79,7 @@ Pergunta do usuário
 ### Skills
 - **`resumir_trecho`** (`skills/resumir_trecho.md`): resume trecho normativo em até 3 bullet points via LLM, sob demanda
 - **`filtro_prompt`** (`skills/filtro_prompt.md`): guardrail de entrada — tokeniza, remove stopwords, bloqueia prompts com >20 palavras úteis
+- **`resumir_conversa`** (`skills/`): resume o histórico da conversa atual em bullet points, acionada quando o usuário pede resumo do chat
 
 ### Memória
 - `MemorySaver` do LangGraph com `thread_id` por conversa
