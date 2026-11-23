@@ -80,7 +80,35 @@
     {
       "role": "user",
       "texto": "consegue resumir este ultimo pedido em um trecho mais curto, e cite um caso notorio e famoso",
-      "ts": "2026-11-22T22:32:01"
+      "ts": "2026-11-23T06:43:28"
+    },
+    {
+      "role": "assistant",
+      "texto": "*   Nos últimos três anos, a Justiça do Trabalho julgou 361.572 casos de assédio, sendo a maioria (338.814) relacionada a assédio moral.\n*   O volume de processos sobre assédio sexual cresceu 44,8%, totalizando 22.758 casos.\n*   Não encontrei nos documentos um caso notório e famoso de assédio moral no serviço público federal.",
+      "ts": "2026-11-23T06:43:28",
+      "meta": {
+        "ferramentas": [
+          {
+            "nome": "resumir_trecho",
+            "args": {
+              "texto": "Nos últimos três anos, a Justiça do Trabalho julgou 361.572 casos de assédio, sendo 338.814 sobre assédio moral e 22.758 sobre assédio sexual. O volume de processos sobre assédio sexual cresceu 44,8%"
+            },
+            "status": "success"
+          },
+          {
+            "nome": "buscar_web",
+            "args": {
+              "consulta": "casos notórios de assédio moral serviço público federal mídia"
+            },
+            "status": "success"
+          }
+        ],
+        "skills": [
+          "resumir_trecho"
+        ],
+        "truncada": false,
+        "bloqueado": ""
+      }
     }
   ]
 }

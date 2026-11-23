@@ -53,6 +53,30 @@ def resumir_trecho(texto: str) -> str:
     except Exception as e:
         return f"Erro ao resumir: {e}"
 
+# ══════════════════════════════════════════════════════════════
+# SKILL B — Resumo da conversa
+# ══════════════════════════════════════════════════════════════
+@tool
+def resumir_conversa(mensagens: str) -> str:
+    """Resume o histórico da conversa atual em bullet points.
+    Use quando o usuário pedir um resumo da conversa, do chat ou do que foi discutido.
+
+    Args:
+        mensagens: histórico da conversa formatado como 'Usuário: ...\nAssistente: ...'.
+    """
+    try:
+        from cgu_rag.agente.modelo import criar_modelo
+        modelo = criar_modelo()
+        prompt = (
+            "Resuma em até 5 bullet points objetivos o que foi discutido nesta conversa. "
+            "Cada bullet deve ter no máximo 20 palavras. "
+            "Responda SOMENTE com os bullets, sem introdução.\n\n"
+            f"HISTÓRICO:\n{mensagens[:3000]}"
+        )
+        resposta = modelo.invoke(prompt)
+        return resposta.content.strip() if hasattr(resposta, "content") else str(resposta).strip()
+    except Exception as e:
+        return f"Erro ao resumir conversa: {e}"
 
 # ══════════════════════════════════════════════════════════════
 # SKILL C — Filtro de prompt (guardrail de entrada)

@@ -33,21 +33,6 @@
     {
       "role": "user",
       "texto": "CNPJ 08.434.728/0001-33 e verifique se constam sanções ou processos administrativos vinculados a essa empresa.",
-      "ts": "2026-11-21T14:53:03"
-    },
-    {
-      "role": "user",
-      "texto": "CNPJ 08.434.728/0001-33 e verifique se constam sanções ou processos administrativos vinculados a essa empresa.",
-      "ts": "2026-11-21T15:12:40"
-    },
-    {
-      "role": "user",
-      "texto": "CNPJ 08.434.728/0001-33 e verifique se constam sanções ou processos administrativos vinculados a essa empresa.",
-      "ts": "2026-11-21T15:33:14"
-    },
-    {
-      "role": "user",
-      "texto": "CNPJ 08.434.728/0001-33 e verifique se constam sanções ou processos administrativos vinculados a essa empresa.",
       "ts": "2026-11-21T15:42:00"
     },
     {
@@ -125,11 +110,6 @@
     {
       "role": "user",
       "texto": "Resuma o acordo de leniência da Odebrecht com a CGU.",
-      "ts": "2026-11-21T15:44:08"
-    },
-    {
-      "role": "user",
-      "texto": "Resuma o acordo de leniência da Odebrecht com a CGU.",
       "ts": "2026-11-22T22:19:52"
     },
     {
@@ -156,6 +136,30 @@
         "skills": [
           "resumir_trecho"
         ],
+        "truncada": false,
+        "bloqueado": ""
+      }
+    },
+    {
+      "role": "user",
+      "texto": "resuma todo o conteudo deste chat",
+      "ts": "2026-11-23T06:17:34"
+    },
+    {
+      "role": "assistant",
+      "texto": "*   Análise do Acordo de Leniência da Lei 12.846/2013, visando atenuação de sanções.\n*   Verificação de dois CNPJs, sem registro de sanções ou processos administrativos vinculados.\n*   Consulta ao CNPJ da Odebrecht, confirmando situação ativa e porte DEMAIS, e o resumo de seu acordo de leniência de R$ 2,72 bilhões.",
+      "ts": "2026-11-23T06:17:34",
+      "meta": {
+        "ferramentas": [
+          {
+            "nome": "resumir_conversa",
+            "args": {
+              "mensagens": "Usuário: o que diz https://www.planalto.gov.br/ccivil_03/_ato2011-2014/2013/lei/l12846.htm sobre acordo de leniência?\nAssistente: O acordo de leniência pode ser celebrado com pessoas jurídicas responsáveis pelos atos ilícitos previstos no art. 5º da Lei nº 12.846/2013, visando isenção ou atenuação das sanções, com colaboração efetiva e identificação dos demais envolvidos. O dano ao Erário só integra o acordo se for incontrover\nUsuário: CNPJ 08.434.728/0001-33 e verifique se constam sanções ou processos administrativos vinculados a essa empresa.\nAssistente: Não foram encontradas sanções registradas (CEIS/CNEP/CEPIM) para o CNPJ 08.434.728/0001-33. Além disso, não há processos judiciais vinculados a esta empresa.\nUsuário: O CNPJ 79.330.973/0001-49 consta no CEIS ou no CNEP?\nAssistente: Não, o CNPJ 79.330.973/0001-49 não consta com sanções registradas no CEIS, CNEP ou CEPIM.\nUsuário: Consulte o CNPJ 19.821.234/0001-28 (Odebrecht Engenharia e Construção) e informe a situação cadastral e o porte\nAssistente: A situação cadastral do CNPJ 19.821.234/0001-28 é ATIVA. O porte da empresa é classificado como DEMAIS. A razão social é ODEBRECHT ENGENHARIA E CONSTRUCAO S.A.\nUsuário: Resuma o acordo de leniência da Odebrecht com a CGU.\nAssistente: *   CGU e AGU firmaram acordo de leniência com a Odebrecht, totalizando R$ 2,72 bilhões.\n*   Odebrecht é a primeira grande empresa da Lava-Jato a fechar acordo com todos os órgãos envolvidos.\n*   Os processos da AGU contra a Odebrecht serão extintos, mas outras investigações continuarão.\nUsuário: resuma todo o conteudo deste chat"
+            },
+            "status": "success"
+          }
+        ],
+        "skills": [],
         "truncada": false,
         "bloqueado": ""
       }

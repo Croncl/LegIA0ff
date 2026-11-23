@@ -71,6 +71,30 @@
         "truncada": false,
         "bloqueado": ""
       }
+    },
+    {
+      "role": "user",
+      "texto": "resuma todas as sancoes de PAR, como multa, publicacoes obrigatorias, e etc",
+      "ts": "2026-11-23T06:28:57"
+    },
+    {
+      "role": "assistant",
+      "texto": "A conversa iniciou com a busca por empresas sancionadas no âmbito do PAR pela CGU, discutindo precedentes de desconsideração da personalidade jurídica. Foram consultados dados cadastrais e sócios da VISION MÍDIA EPROPAGANDA LTDA., cujo CNPJ é 10.435.582/0001-92 e está com situação INAPTA. O último tópico foi o resumo das sanções aplicadas no PAR, como multas e publicações obrigatórias.",
+      "ts": "2026-11-23T06:28:57",
+      "meta": {
+        "ferramentas": [
+          {
+            "nome": "resumir_conversa",
+            "args": {
+              "mensagens": "Usuário: Empresas sancionadas em PAR pela CGU?\nAssistente: Existem precedentes de desconsideração da personalidade jurídica no âmbito do PAR, como no caso da ARATEC ENGENHARIA, CONSULTORIA & REPRESENTAÇÕES LTDA., devido ao abuso de direito. Outros casos citados incluem VISION MÍDIA EPROPAGANDA LTDA., PACATU CULTURA, EDUCAÇÃO E AVIAÇÃO LTDA., INTERCAPITAL BE\nUsuário: casos citados incluem VISION MÍDIA EPROPAGANDA LTDA., PACATU CULTURA, EDUCAÇÃO E AVIAÇÃO LTDA., INTERCAPITAL BELAS ARTES LTDA. \nAssistente: Para consultar os dados cadastrais dessas empresas, por favor, forneça o CNPJ de cada uma delas.\nUsuário: asos citados incluem VISION MÍDIA EPROPAGANDA LTDA., busque o cnpj e con sulte os socios\nAssistente: O CNPJ da VISION MIDIA E PROPAGANDA LTDA. é 10.435.582/0001-92, e a empresa está com situação INAPTA. Os sócios-administradores cadastrados são ALVARO LUIS PADILLA VICTORICA e ZULEICA AMORIM.\nUsuário: resuma todas as sancoes de PAR, como multa, publicacoes obrigatorias, e etc"
+            },
+            "status": "success"
+          }
+        ],
+        "skills": [],
+        "truncada": false,
+        "bloqueado": ""
+      }
     }
   ]
 }

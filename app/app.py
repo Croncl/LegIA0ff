@@ -21,7 +21,7 @@ from cgu_rag.agente.grafo import conversar, criar_grafo
 from cgu_rag.agente.mcp_comunidade import criar_ferramentas_web
 from cgu_rag.agente.mcp_transparencia import criar_ferramentas_transparencia
 from cgu_rag.agente.modelo import criar_modelo
-from cgu_rag.agente.skills import resumir_trecho
+from cgu_rag.agente.skills import resumir_trecho, resumir_conversa
 from ui_estilo import (
     aplicar_estilo,
     renderizar_cabecalho,
@@ -49,7 +49,7 @@ def _inicializar_agente():
             [criar_ferramenta_consulta(buscador)]
             + criar_ferramentas_web()
             + criar_ferramentas_transparencia()
-            + [resumir_trecho]
+            + [resumir_trecho, resumir_conversa]  # <-- adicionar
         )
         
         # Diagnóstico granular
@@ -394,7 +394,11 @@ with col_main:
             with st.chat_message("assistant"):
                 with st.spinner("Analisando documentos e consultando ferramentas..."):
                     resposta, estado = conversar(
-                        st.session_state.grafo, pergunta, current_thread
+                        st.session_state.grafo, 
+                        pergunta, 
+                        current_thread, 
+                        historico_json=st.session_state.historico,  # <-- novo
+
                     )
             meta_msg = {
                 "ferramentas": estado.get("ferramentas", []),
