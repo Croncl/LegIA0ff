@@ -97,6 +97,17 @@ if "retry" not in st.session_state:
 if "pergunta_retry" not in st.session_state:
     st.session_state.pergunta_retry = None
 
+if "corpus_stats" not in st.session_state:
+    try:
+        from cgu_rag.busca import abrir_db
+        con = abrir_db()
+        n_trechos = con.execute("SELECT COUNT(*) FROM chunks WHERE tipo != 'indice'").fetchone()[0]
+        n_docs = con.execute("SELECT COUNT(*) FROM documents").fetchone()[0]
+        st.session_state.corpus_stats = {"docs": n_docs, "trechos": n_trechos}
+        con.close()
+    except Exception:
+        st.session_state.corpus_stats = {"docs": "?", "trechos": "?"}
+
 # Inicialização robusta do agente via cache
 if st.session_state.get("grafo") is None:
     try:
@@ -250,6 +261,7 @@ with col_side:
         ferramentas_nomes=st.session_state.get("ferramentas_nomes", []),
         on_nova_conversa=acao_nova_conversa,
         on_carregar_chat=acao_renderizar_lista_chats,
+        corpus_stats=st.session_state.corpus_stats,
     )
     # Botão de emergência — desbloqueia chat travado
     if st.session_state.status_chats.get(st.session_state.thread_id) == "processing":
@@ -272,7 +284,11 @@ with col_main:
     esta_processando = (status_atual == "processing")
 
     if esta_processando:
-        # Cria um container visual chamativo
+        st.markdown("""
+            <style>
+            [data-testid="stChatInput"] { display: none !important; }
+            </style>
+        """, unsafe_allow_html=True)
         st.markdown(
             f"""
             <div style="

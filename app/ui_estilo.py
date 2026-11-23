@@ -879,6 +879,7 @@ def renderizar_sidebar_config(
     ferramentas_nomes: list[str],
     on_nova_conversa,
     on_carregar_chat,
+    corpus_stats: dict | None = None,   # <-- novo
 ) -> None:
     """Sidebar de configurações, ferramentas e histórico de chats."""
     with st.sidebar:
@@ -910,7 +911,7 @@ def renderizar_sidebar_config(
         st.markdown(
             f"""
             <div class="cg-card-muted">
-                <div><strong>Corpus:</strong> 6 PDFs · 1567 trechos</div>
+                <div><strong>Corpus:</strong> {corpus_stats.get('docs','?')} PDFs · {corpus_stats.get('trechos','?')} trechos</div>
                 <div style="margin-top:6px"><strong>Modelo:</strong>
                 <code>{settings.llm_model}</code>
                 <span style="font-size:0.85rem">(Ollama local)</span></div>

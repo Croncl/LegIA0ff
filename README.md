@@ -136,15 +136,33 @@ data/
 ```bash
 # 1. Clone e instale
 git clone https://github.com/Croncl/LegIA0ff
+
+INSTALACAO DO MINICONDA
+~/miniconda3/bin/conda init bash
+source ~/.bashrc
+
+
 cd LegIA0ff
-pip install -e ".[dev]"
+python -m pip install -e ".[dev]"
 
 # 2. Configuração
-cp .env.example .env
+conda create -n legia0ff python=3.11 
+conda activate legia0ff
+
+#cp .env.example .env
 # Edite .env se necessário (padrão: gemma4:e4b, Ollama local)
 
 # 3. Modelo
 ollama pull gemma4:e4b
+
+windows 
+executar: configurar-cgu-rag.ps1
+
+linux 
+executar: configurar-cgu-rag.sh
+
+chmod +x configurar-cgu-rag.sh
+./configurar-cgu-rag.sh
 
 # 4. Corpus (coloque os PDFs da CGU em data/pdfs/ e ingira)
 python scripts/ingerir.py

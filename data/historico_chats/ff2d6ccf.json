@@ -130,12 +130,12 @@
     {
       "role": "user",
       "texto": "Resuma o acordo de leniência da Odebrecht com a CGU.",
-      "ts": "2026-11-21T15:59:04"
+      "ts": "2026-11-22T22:19:52"
     },
     {
       "role": "assistant",
-      "texto": "Não encontrei nos documentos.",
-      "ts": "2026-11-21T15:59:04",
+      "texto": "*   CGU e AGU firmaram acordo de leniência com a Odebrecht, totalizando R$ 2,72 bilhões.\n*   Odebrecht é a primeira grande empresa da Lava-Jato a fechar acordo com todos os órgãos envolvidos.\n*   Os processos da AGU contra a Odebrecht serão extintos, mas outras investigações continuarão.",
+      "ts": "2026-11-22T22:19:52",
       "meta": {
         "ferramentas": [
           {
@@ -144,10 +144,20 @@
               "consulta": "acordo de leniência Odebrecht CGU"
             },
             "status": "success"
+          },
+          {
+            "nome": "resumir_trecho",
+            "args": {
+              "texto": "Após três anos de negociações, o Ministério da Transparência e Controladoria-Geral da União (CGU) e a Advocacia-Geral da União (AGU) assinaram com a Odebrecht um acordo de leniência de R$ 2,72 bilhões, que serão pagos em parcelas anuais ao longo de 22 anos. Com o acordo, a Odebrecht é a primeira grande empresa investigada pela \"Operação Lava-Jato\" a ter acordo de leniência com todos os órgãos envolvidos com o tema. De acordo com a advogada-Geral da União, Grace Mendonça, os processos movidos pela AGU contra a Odebrecht serão extintos, mas as investigações relacionadas a outras empresas envolvidas continuarão."
+            },
+            "status": "success"
           }
         ],
-        "skills": [],
-        "truncada": false
+        "skills": [
+          "resumir_trecho"
+        ],
+        "truncada": false,
+        "bloqueado": ""
       }
     }
   ]

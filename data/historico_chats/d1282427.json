@@ -26,35 +26,61 @@
     },
     {
       "role": "user",
-      "texto": "O CPF 123.456.789-00 possui sanções no CEIS?\n",
-      "ts": "2026-11-21T14:25:05"
+      "texto": "o que diz a Lei nº 12.250 sobre assedio moral?",
+      "ts": "2026-11-22T22:23:25"
     },
     {
       "role": "assistant",
-      "texto": "Não há sanções registradas para o CPF 123.456.789-00 no CEIS/CNEP/CEPIM.",
-      "ts": "2026-11-21T14:25:05",
+      "texto": "A Lei nº 12.250/2006 veda o assédio moral no âmbito da administração pública estadual direta, indireta e fundações públicas. É proibido submeter o servidor a procedimentos repetitivos que impliquem em violação de sua dignidade ou que o sujeitem a condições de trabalho humilhantes ou degradantes. Os órgãos da administração pública são obrigados a tomar as medidas necessárias para prevenir o assédio moral.",
+      "ts": "2026-11-22T22:23:25",
       "meta": {
         "ferramentas": [
           {
-            "nome": "transparencia_sancoes",
+            "nome": "buscar_web",
             "args": {
-              "cpf_cnpj": "123.456.789-00"
-            }
+              "consulta": "Lei nº 12.250 assédio moral"
+            },
+            "status": "success"
           }
         ],
         "skills": [],
-        "truncada": false
+        "truncada": false,
+        "bloqueado": ""
       }
     },
     {
       "role": "user",
-      "texto": "consulta esse cpf 04566461912, o que tem sobvre ele na internet?",
-      "ts": "2026-11-21T14:29:00"
+      "texto": "cide casos de assedio noticiados na midia nos ultimos 3 anos",
+      "ts": "2026-11-22T22:25:47"
     },
     {
       "role": "user",
-      "texto": "o que diz a Lei nº 12.250 sobre assedio moral?",
-      "ts": "2026-11-21T14:57:12"
+      "texto": "cide casos de assedio noticiados na midia nos ultimos 3 anos",
+      "ts": "2026-11-22T22:28:40"
+    },
+    {
+      "role": "assistant",
+      "texto": "Nos últimos três anos, a Justiça do Trabalho julgou 361.572 casos de assédio, sendo 338.814 sobre assédio moral e 22.758 sobre assédio sexual. O volume de processos sobre assédio sexual cresceu 44,8% no período, e os de assédio moral aumentaram 5%. Há também notícias de investigações policiais sobre suspeitas de assédio no DF envolvendo o ex-governador da Paraíba, Elijonas Maia.",
+      "ts": "2026-11-22T22:28:40",
+      "meta": {
+        "ferramentas": [
+          {
+            "nome": "buscar_web",
+            "args": {
+              "consulta": "casos de assédio noticiados na mídia últimos 3 anos"
+            },
+            "status": "success"
+          }
+        ],
+        "skills": [],
+        "truncada": false,
+        "bloqueado": ""
+      }
+    },
+    {
+      "role": "user",
+      "texto": "consegue resumir este ultimo pedido em um trecho mais curto, e cite um caso notorio e famoso",
+      "ts": "2026-11-22T22:32:01"
     }
   ]
 }
