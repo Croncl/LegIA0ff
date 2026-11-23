@@ -1,6 +1,6 @@
 # LegIA0ff — Assistente RAG Agêntico para Legislação (PAD e PAR)
 
-**Disciplina:** Processamento de Linguagem Natural — Pós-Graduação  
+**Disciplina:** TÓPICOS ESPECIAIS EM INTELIGÊNCIA COMPUTACIONAL A - IA Agêntica
 **Dupla:** Cristovão Lacerda Cronje · Olive Oliveira Medeiros  
 **Repositório:** github.com/Croncl/LegIA0ff (branch `main`)
 
