@@ -241,6 +241,15 @@ def _css_variaveis(tema: str, alto_contraste: bool) -> str:
 
 _CSS_ESTATICO = """
 /* ---------- Base ---------- */
+/* ---------- Aproveitamento da largura da janela ---------- */
+[data-testid="stMainBlockContainer"],
+section.main > div.block-container {
+    width: 100% !important;
+    max-width: 100% !important;
+    padding-left: clamp(1rem, 2vw, 2rem) !important;
+    padding-right: clamp(1rem, 2vw, 2rem) !important;
+}
+
 html, body, [class*="css"] {
     color: var(--cg-text);
     font-family: "Atkinson Hyperlegible", "Inter", sans-serif;

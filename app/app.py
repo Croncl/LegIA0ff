@@ -250,170 +250,271 @@ def acao_renderizar_lista_chats() -> None:
                 st.rerun()
 
 
+
 # ---------------------------------------------------------------------------
 # Layout
 # ---------------------------------------------------------------------------
-col_main, col_side = st.columns([3, 1])
 
-with col_side:
-    renderizar_sidebar_config(
-        thread_id=st.session_state.thread_id,
-        ferramentas_nomes=st.session_state.get("ferramentas_nomes", []),
-        on_nova_conversa=acao_nova_conversa,
-        on_carregar_chat=acao_renderizar_lista_chats,
-        corpus_stats=st.session_state.corpus_stats,
-    )
-    # Botão de emergência — desbloqueia chat travado
+# Sidebar: renderizar_sidebar_config() já utiliza with st.sidebar internamente
+renderizar_sidebar_config(
+    thread_id=st.session_state.thread_id,
+    ferramentas_nomes=st.session_state.get("ferramentas_nomes", []),
+    on_nova_conversa=acao_nova_conversa,
+    on_carregar_chat=acao_renderizar_lista_chats,
+    corpus_stats=st.session_state.corpus_stats,
+)
+
+# Botões de emergência na sidebar
+with st.sidebar:
+
+    # Desbloqueia o chat atual
     if st.session_state.status_chats.get(st.session_state.thread_id) == "processing":
         if st.button("🔓 Desbloquear chat", key="btn_desbloquear"):
             st.session_state.status_chats[st.session_state.thread_id] = "idle"
             st.rerun()
-    # Botão de emergência global — desbloqueia todos os chats travados
-    chats_travados = [tid for tid, s in st.session_state.status_chats.items() if s == "processing"]
+
+    # Desbloqueia todos os chats travados
+    chats_travados = [
+        tid
+        for tid, status in st.session_state.status_chats.items()
+        if status == "processing"
+    ]
+
     if chats_travados:
-        if st.button(f"🔓 Desbloquear todos ({len(chats_travados)})", key="btn_desbloquear_todos"):
+        if st.button(
+            f"🔓 Desbloquear todos ({len(chats_travados)})",
+            key="btn_desbloquear_todos",
+        ):
             for tid in chats_travados:
                 st.session_state.status_chats[tid] = "idle"
             st.rerun()
-with col_main:
-    renderizar_cabecalho()
 
-    # --- INDICADOR NO CHAT ATUAL ---
-    current_thread = st.session_state.thread_id
-    status_atual = st.session_state.status_chats.get(current_thread, "idle")
-    esta_processando = (status_atual == "processing")
 
-    if esta_processando:
-        st.markdown("""
-            <style>
-            [data-testid="stChatInput"] { display: none !important; }
-            </style>
-        """, unsafe_allow_html=True)
-        st.markdown(
-            f"""
-            <div style="
-                background: rgba(107, 151, 255, 0.15);
-                border: 1px solid rgba(107, 151, 255, 0.4);
-                border-radius: 8px;
-                padding: 10px 15px;
-                margin-bottom: 15px;
-                display: flex;
-                align-items: center;
-                gap: 10px;
-                color: var(--cg-text);
-                font-weight: 500;
-            ">
-                <div class="spinner-pulsante" style="
-                    width: 12px; height: 12px; 
-                    background-color: #6B97FF; 
-                    border-radius: 50%;
-                    animation: pulsar 1.5s infinite;
-                "></div>
-                O Assistente está analisando os documentos... Por favor, aguarde.
-            </div>
-            <style>
-                @keyframes pulsar {{
-                    0% {{ transform: scale(0.8); opacity: 0.5; }}
-                    50% {{ transform: scale(1.2); opacity: 1; }}
-                    100% {{ transform: scale(0.8); opacity: 0.5; }}
-                }}
-            </style>
-            """,
-            unsafe_allow_html=True
-        )
-    # ---------------------------------
+# ---------------------------------------------------------------------------
+# Área principal
+# ---------------------------------------------------------------------------
 
-    # 🧠 MAPA DE CONHECIMENTO
-    renderizar_mapa_conhecimento(st.session_state.historico, top_n=40)
+renderizar_cabecalho()
 
-    # Histórico
-    idx_user = -1
-    for msg in st.session_state.historico:
-        if msg["role"] == "user":
-            idx_user += 1
-            col_msg, col_x = st.columns([12, 1])
-            with col_msg:
-                renderizar_mensagem(msg)
-            with col_x:
-                if st.button(
-                    "✖",
-                    key=f"del_turno_{st.session_state.thread_id}_{idx_user}",
-                    help="Excluir esta pergunta e resposta (inclusive do contexto do modelo)",
-                    disabled=esta_processando,
-                ):
-                    excluir_turno(idx_user)
-                    st.rerun()
-        else:
-            renderizar_mensagem(msg)
+# --- INDICADOR NO CHAT ATUAL ---
+current_thread = st.session_state.thread_id
+status_atual = st.session_state.status_chats.get(current_thread, "idle")
+esta_processando = status_atual == "processing"
 
-    # --- LÓGICA DE STATUS POR CHAT ---
-    current_thread = st.session_state.thread_id
-    status_atual = st.session_state.status_chats.get(current_thread, "idle")
-    esta_processando = (status_atual == "processing")
-
-    if esta_processando:
-        st.markdown("🔄 Analisando documentos...")
-
-    # Botão retry — aparece só quando a última mensagem é do assistente E o chat está livre
-    if (
-        st.session_state.historico
-        and st.session_state.historico[-1]["role"] == "assistant"
-        and not esta_processando
-    ):
-        if st.button("🔄 Tentar novamente", key="btn_retry"):
-            ultima_pergunta = next(
-                (m["texto"] for m in reversed(st.session_state.historico) if m["role"] == "user"),
-                None,
-            )
-            st.session_state.historico.pop()  # resposta
-            if st.session_state.historico and st.session_state.historico[-1]["role"] == "user":
-                st.session_state.historico.pop()  # pergunta (será re-adicionada)
-            st.session_state.pergunta_retry = ultima_pergunta
-            st.session_state.retry_limpar = True
-            st.rerun()
-
-    # Input: desabilita APENAS se o chat atual estiver processando
-    pergunta = st.chat_input(
-        "Digite sua pergunta sobre PAD ou PAR...",
-        disabled=esta_processando,
+if esta_processando:
+    st.markdown(
+        """
+        <style>
+        [data-testid="stChatInput"] {
+            display: none !important;
+        }
+        </style>
+        """,
+        unsafe_allow_html=True,
     )
 
-    # Se vier do retry, usa a pergunta recuperada
-    if st.session_state.pergunta_retry:
-        pergunta = st.session_state.pergunta_retry
-        st.session_state.pergunta_retry = None
+    st.markdown(
+        f"""
+        <div style="
+            background: rgba(107, 151, 255, 0.15);
+            border: 1px solid rgba(107, 151, 255, 0.4);
+            border-radius: 8px;
+            padding: 10px 15px;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: var(--cg-text);
+            font-weight: 500;
+        ">
+            <div class="spinner-pulsante" style="
+                width: 12px;
+                height: 12px;
+                background-color: #6B97FF;
+                border-radius: 50%;
+                animation: pulsar 1.5s infinite;
+            "></div>
+            O Assistente está analisando os documentos... Por favor, aguarde.
+        </div>
 
-    # --- PROCESSAMENTO DA PERGUNTA ---
-    if pergunta and not esta_processando:
-        st.session_state.status_chats[current_thread] = "processing"
-        ts = datetime.now().isoformat(timespec="seconds")
-        st.session_state.historico.append({"role": "user", "texto": pergunta, "ts": ts})
-        try:
-            with st.chat_message("user"):
-                st.markdown(pergunta)
-            with st.chat_message("assistant"):
-                with st.spinner("Analisando documentos e consultando ferramentas..."):
-                    resposta, estado = conversar(
-                        st.session_state.grafo, 
-                        pergunta, 
-                        current_thread, 
-                        historico_json=st.session_state.historico,  # <-- novo
+        <style>
+            @keyframes pulsar {{
+                0% {{ transform: scale(0.8); opacity: 0.5; }}
+                50% {{ transform: scale(1.2); opacity: 1; }}
+                100% {{ transform: scale(0.8); opacity: 0.5; }}
+            }}
+        </style>
+        """,
+        unsafe_allow_html=True,
+    )
 
-                    )
-            meta_msg = {
-                "ferramentas": estado.get("ferramentas", []),
-                "skills": estado.get("skills", []),
-                "truncada": estado.get("truncada", False),
-                "bloqueado": estado.get("bloqueado", ""),
-            }
-            st.session_state.historico.append(
-                {"role": "assistant", "texto": resposta, "ts": ts, "meta": meta_msg}
-            )
-            salvar_historico()
-        except Exception as e:
-            st.session_state.historico.append(
-                {"role": "assistant", "texto": f"❌ Erro: {type(e).__name__}: {e}", "ts": ts}
-            )
-        finally:
-            st.session_state.status_chats[current_thread] = "idle"
+
+# ---------------------------------------------------------------------------
+# Mapa de conhecimento
+# ---------------------------------------------------------------------------
+
+renderizar_mapa_conhecimento(
+    st.session_state.historico,
+    top_n=40,
+)
+
+
+# ---------------------------------------------------------------------------
+# Histórico de mensagens
+# ---------------------------------------------------------------------------
+
+idx_user = -1
+
+for msg in st.session_state.historico:
+
+    if msg["role"] == "user":
+        idx_user += 1
+
+        col_msg, col_x = st.columns([12, 1])
+
+        with col_msg:
+            renderizar_mensagem(msg)
+
+        with col_x:
+            if st.button(
+                "✖",
+                key=f"del_turno_{st.session_state.thread_id}_{idx_user}",
+                help="Excluir esta pergunta e resposta (inclusive do contexto do modelo)",
+                disabled=esta_processando,
+            ):
+                excluir_turno(idx_user)
+                st.rerun()
+
+    else:
+        renderizar_mensagem(msg)
+
+
+# ---------------------------------------------------------------------------
+# Lógica de status por chat
+# ---------------------------------------------------------------------------
+
+current_thread = st.session_state.thread_id
+status_atual = st.session_state.status_chats.get(current_thread, "idle")
+esta_processando = status_atual == "processing"
+
+if esta_processando:
+    st.markdown("🔄 Analisando documentos...")
+
+
+# ---------------------------------------------------------------------------
+# Botão de nova tentativa
+# ---------------------------------------------------------------------------
+
+if (
+    st.session_state.historico
+    and st.session_state.historico[-1]["role"] == "assistant"
+    and not esta_processando
+):
+    if st.button("🔄 Tentar novamente", key="btn_retry"):
+
+        ultima_pergunta = next(
+            (
+                m["texto"]
+                for m in reversed(st.session_state.historico)
+                if m["role"] == "user"
+            ),
+            None,
+        )
+
+        # Remove a resposta anterior
+        st.session_state.historico.pop()
+
+        # Remove a pergunta anterior, que será reapresentada
+        if (
+            st.session_state.historico
+            and st.session_state.historico[-1]["role"] == "user"
+        ):
+            st.session_state.historico.pop()
+
+        st.session_state.pergunta_retry = ultima_pergunta
+        st.session_state.retry_limpar = True
+
         st.rerun()
+
+
+# ---------------------------------------------------------------------------
+# Entrada do chat
+# ---------------------------------------------------------------------------
+
+pergunta = st.chat_input(
+    "Digite sua pergunta sobre PAD ou PAR...",
+    disabled=esta_processando,
+)
+
+
+# Se vier do botão de retry, recupera a pergunta anterior
+if st.session_state.pergunta_retry:
+    pergunta = st.session_state.pergunta_retry
+    st.session_state.pergunta_retry = None
+
+
+# ---------------------------------------------------------------------------
+# Processamento da pergunta
+# ---------------------------------------------------------------------------
+
+if pergunta and not esta_processando:
+
+    st.session_state.status_chats[current_thread] = "processing"
+
+    ts = datetime.now().isoformat(timespec="seconds")
+
+    st.session_state.historico.append(
+        {
+            "role": "user",
+            "texto": pergunta,
+            "ts": ts,
+        }
+    )
+
+    try:
+        with st.chat_message("user"):
+            st.markdown(pergunta)
+
+        with st.chat_message("assistant"):
+            with st.spinner(
+                "Analisando documentos e consultando ferramentas..."
+            ):
+                resposta, estado = conversar(
+                    st.session_state.grafo,
+                    pergunta,
+                    current_thread,
+                    historico_json=st.session_state.historico,
+                )
+
+        meta_msg = {
+            "ferramentas": estado.get("ferramentas", []),
+            "skills": estado.get("skills", []),
+            "truncada": estado.get("truncada", False),
+            "bloqueado": estado.get("bloqueado", ""),
+        }
+
+        st.session_state.historico.append(
+            {
+                "role": "assistant",
+                "texto": resposta,
+                "ts": ts,
+                "meta": meta_msg,
+            }
+        )
+
+        salvar_historico()
+
+    except Exception as e:
+
+        st.session_state.historico.append(
+            {
+                "role": "assistant",
+                "texto": f"❌ Erro: {type(e).__name__}: {e}",
+                "ts": ts,
+            }
+        )
+
+    finally:
+        st.session_state.status_chats[current_thread] = "idle"
+
+    st.rerun()
